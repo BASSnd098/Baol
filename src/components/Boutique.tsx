@@ -1,40 +1,47 @@
 import { useState } from "react";
+// Importation de l'interface Produit depuis ton AdminDashboard pour garder une seule source de vérité
+import { Produit } from "./AdminDashboard";
 
-// ============================================================
-// 🔧 CONFIGURATION DU NUMÉRO WHATSAPP DE BAOL_TECHNOLOGIES
-// ============================================================
+// 1. Définition de la structure d'un article présent dans le panier
+interface ProduitPanier extends Produit {
+  qte: number;
+}
+
+// 2. Typage des Props reçues par le composant Boutique
+interface BoutiqueProps {
+  produits: Produit[];
+}
+
+// 3. Configuration du numéro WhatsApp de Baol_Technologies
 const WHATSAPP_NUMBER = "221784634165";
 
 // Format prix FCFA
-const formatPrix = (p) => {
+const formatPrix = (p: number | string) => {
   const prixNum = typeof p === "number" ? p : Number(p) || 0;
   return prixNum.toLocaleString("fr-FR") + " FCFA";
 };
 
-// On reçoit "produits" depuis App.tsx pour que ce soit 100% dynamique
-export default function Boutique({ produits }) {
-  const [panier, setPanier] = useState([]);
-  const [categorieActive, setCategorieActive] = useState("Tous");
-  const [panierOuvert, setPanierOuvert] = useState(false);
-  const [notification, setNotification] = useState("");
+export default function Boutique({ produits }: BoutiqueProps) {
+  // Spécification explicite du type pour éviter le bug du "never[]"
+  const [panier, setPanier] = useState<ProduitPanier[]>([]);
+  const [categorieActive, setCategorieActive] = useState<string>("Tous");
+  const [panierOuvert, setPanierOuvert] = useState<boolean>(false);
+  const [notification, setNotification] = useState<string>(" ");
 
-  // Catégories alignées avec ton Admin Panel
   const categories = ["Tous", "Ordinateurs", "IoT", "Réseaux", "Sécurité", "Stockage", "Logiciels"];
-
-  // Sécurité si la liste est vide au chargement
   const listeProduits = produits || [];
 
-  // Filtrage des produits de l'Admin
+  // Filtrage des produits
   const produitsFiltres =
     categorieActive === "Tous"
       ? listeProduits
-      : listeProduits.filter((p) => p.categorie === categorieActive);
+      : listeProduits.filter((p: Produit) => p.categorie === categorieActive);
 
-  const ajouterAuPanier = (produit) => {
-    setPanier((prev) => {
-      const exist = prev.find((p) => p.id === produit.id);
+  const ajouterAuPanier = (produit: Produit) => {
+    setPanier((prev: ProduitPanier[]) => {
+      const exist = prev.find((p: ProduitPanier) => p.id === produit.id);
       if (exist) {
-        return prev.map((p) =>
+        return prev.map((p: ProduitPanier) =>
           p.id === produit.id ? { ...p, qte: p.qte + 1 } : p
         );
       }
@@ -44,21 +51,22 @@ export default function Boutique({ produits }) {
     setTimeout(() => setNotification(""), 2500);
   };
 
-  const modifierQte = (id, delta) => {
-    setPanier((prev) =>
+  const modifierQte = (id: number, delta: number) => {
+    setPanier((prev: ProduitPanier[]) =>
       prev
-        .map((p) => (p.id === id ? { ...p, qte: p.qte + delta } : p))
-        .filter((p) => p.qte > 0)
+        .map((p: ProduitPanier) => (p.id === id ? { ...p, qte: p.qte + delta } : p))
+        .filter((p: ProduitPanier) => p.qte > 0)
     );
   };
 
-  const totalPanier = panier.reduce((acc, p) => acc + (Number(p.prix) || 0) * p.qte, 0);
-  const nbArticles = panier.reduce((acc, p) => acc + p.qte, 0);
+  // Typage explicite des accumulateurs du reduce
+  const totalPanier = panier.reduce((acc: number, p: ProduitPanier) => acc + (Number(p.prix) || 0) * p.qte, 0);
+  const nbArticles = panier.reduce((acc: number, p: ProduitPanier) => acc + p.qte, 0);
 
   const envoyerWhatsapp = () => {
     if (panier.length === 0) return;
     const lignes = panier
-      .map((p) => `• ${p.nom} x${p.qte} — ${formatPrix(Number(p.prix) * p.qte)}`)
+      .map((p: ProduitPanier) => `• ${p.nom} x${p.qte} — ${formatPrix(Number(p.prix) * p.qte)}`)
       .join("\n");
     
     const message = `Bonjour Baol_Technologies 👋\n\nJe souhaite commander du matériel :\n\n${lignes}\n\n*Total : ${formatPrix(totalPanier)}*\n\nMerci de me confirmer la disponibilité et la livraison.`;
@@ -69,7 +77,7 @@ export default function Boutique({ produits }) {
   return (
     <div className="min-h-screen bg-base-100 relative text-gray-800">
       {/* ── NOTIFICATION ── */}
-      {notification && (
+      {notification.trim() && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-5 py-2 rounded-full shadow-lg text-sm transition-all">
           {notification}
         </div>
@@ -103,8 +111,8 @@ export default function Boutique({ produits }) {
       {/* ── GRILLE PRODUITS DYNAMIQUE ── */}
       {produitsFiltres.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-7xl mx-auto px-6 pb-32">
-          {produitsFiltres.map((produit) => {
-            const dansLePanier = panier.find((p) => p.id === produit.id);
+          {produitsFiltres.map((produit: Produit) => {
+            const dansLePanier = panier.find((p: ProduitPanier) => p.id === produit.id);
             return (
               <div
                 key={produit.id}
@@ -189,7 +197,7 @@ export default function Boutique({ produits }) {
         </button>
       )}
 
-      {/* ── BOUTON WHATSAPP RAPIDE FLOTTANT (FIXÉ À GAUCHE) ── */}
+      {/* ── BOUTON WHATSAPP RAPIDE FLOTTANT ── */}
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour Baol_Technologies 👋, j'aimerais avoir des informations sur vos solutions de sécurité et matériels.")}`}
         target="_blank"
@@ -219,7 +227,7 @@ export default function Boutique({ produits }) {
               {panier.length === 0 ? (
                 <p className="text-gray-400 text-center mt-20">Votre panier est vide.</p>
               ) : (
-                panier.map((p) => (
+                panier.map((p: ProduitPanier) => (
                   <div key={p.id} className="flex items-center gap-3 border-b pb-4">
                     <img src={p.img || "https://via.placeholder.com/150"} alt={p.nom} className="w-14 h-14 rounded-xl object-cover" />
                     <div className="flex-1">

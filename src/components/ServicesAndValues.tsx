@@ -1,8 +1,21 @@
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react";
 
-const FORMSPREE_URL = "https://formspree.io/f/mwvzvwdq"
+const FORMSPREE_URL = "https://formspree.io/f/mwvzvwdq";
 
-const servicesData = {
+// 1. Interface pour typer la structure d'un service
+interface ServiceDetail {
+  label: string;
+  icon: string;
+  title: string;
+  desc: string;
+  offres: string[];
+  tech: string[];
+  color: string;
+  accent: string;
+}
+
+// 2. Définition du dictionnaire de données avec ses clés strictes
+const servicesData: Record<string, ServiceDetail> = {
   developpement: {
     label: "Développement",
     icon: "ti-code",
@@ -53,59 +66,89 @@ const servicesData = {
     color: "from-orange-500 to-amber-700",
     accent: "#D97706",
   },
+};
+
+// Interface pour le formulaire de devis
+interface FormDevis {
+  prenom: string;
+  nom: string;
+  email: string;
+  tel: string;
+  entreprise: string;
+  service: string;
+  detail: string;
 }
 
-function useInView(threshold = 0.15) {
-  const [visible, setVisible] = useState(false)
-  const ref = useRef(null)
+// Hook CustomuseInView proprement typé pour les éléments HTML div
+function useInView(threshold = 0.15): [React.RefObject<HTMLDivElement | null>, boolean] {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true) }, { threshold })
-    if (ref.current) obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [])
-  return [ref, visible]
+    const currentRef = ref.current;
+    const obs = new IntersectionObserver(([e]) => { 
+      if (e.isIntersecting) setVisible(true); 
+    }, { threshold });
+    
+    if (currentRef) obs.observe(currentRef);
+    return () => {
+      if (currentRef) obs.unobserve(currentRef);
+      obs.disconnect();
+    };
+  }, [threshold]);
+
+  return [ref, visible];
 }
 
-function DevisModal({ isOpen, onClose, servicePreselect }) {
-  const [form, setForm] = useState({
+// Props pour le composant DevisModal
+interface DevisModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  servicePreselect: string;
+}
+
+function DevisModal({ isOpen, onClose, servicePreselect }: DevisModalProps) {
+  const [form, setForm] = useState<FormDevis>({
     prenom: "", nom: "", email: "", tel: "", entreprise: "", service: servicePreselect || "", detail: ""
-  })
-  const [errors, setErrors] = useState({})
-  const [status, setStatus] = useState("idle")
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof FormDevis, string>>>({});
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
   useEffect(() => {
     if (isOpen) {
-      setForm(f => ({ ...f, service: servicePreselect || "" }))
-      setErrors({})
-      setStatus("idle")
-      document.body.style.overflow = "hidden"
+      setForm(f => ({ ...f, service: servicePreselect || "" }));
+      setErrors({});
+      setStatus("idle");
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ""
+      document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = "" }
-  }, [isOpen, servicePreselect])
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen, servicePreselect]);
 
   const validate = () => {
-    const e = {}
-    if (!form.prenom.trim()) e.prenom = "Requis"
-    if (!form.nom.trim()) e.nom = "Requis"
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Email invalide"
-    if (!form.tel.trim()) e.tel = "Requis"
-    if (!form.service) e.service = "Choisissez un service"
-    if (!form.detail.trim() || form.detail.trim().length < 10) e.detail = "Minimum 10 caractères"
-    return e
-  }
+    const e: Partial<Record<keyof FormDevis, string>> = {};
+    if (!form.prenom.trim()) e.prenom = "Requis";
+    if (!form.nom.trim()) e.nom = "Requis";
+    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Email invalide";
+    if (!form.tel.trim()) e.tel = "Requis";
+    if (!form.service) e.service = "Choisissez un service";
+    if (!form.detail.trim() || form.detail.trim().length < 10) e.detail = "Minimum 10 caractères";
+    return e;
+  };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setForm(f => ({ ...f, [name]: value }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }))
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
+    if (errors[name as keyof FormDevis]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
 
   const handleSubmit = async () => {
-    const e = validate()
-    if (Object.keys(e).length > 0) { setErrors(e); return }
-    setStatus("sending")
+    const e = validate();
+    if (Object.keys(e).length > 0) { setErrors(e); return; }
+    setStatus("sending");
     try {
       const res = await fetch(FORMSPREE_URL, {
         method: "POST",
@@ -119,25 +162,25 @@ function DevisModal({ isOpen, onClose, servicePreselect }) {
           "Service souhaité": form.service,
           "Détail du projet": form.detail,
         }),
-      })
-      setStatus(res.ok ? "success" : "error")
+      });
+      setStatus(res.ok ? "success" : "error");
     } catch {
-      setStatus("error")
+      setStatus("error");
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const inputClass = (field) =>
-    `w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-white ${
+  const inputClass = (field: keyof FormDevis) =>
+    `w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-white text-gray-800 ${
       errors[field] ? "border-red-400 focus:border-red-500" : "border-gray-200 focus:border-blue-400"
-    }`
+    }`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto z-10">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto z-10 text-gray-800">
 
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
@@ -269,23 +312,24 @@ function DevisModal({ isOpen, onClose, servicePreselect }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export default function Services() {
-  const [activeTab, setActiveTab] = useState("developpement")
-  const [animating, setAnimating] = useState(false)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [headerRef, headerVisible] = useInView(0.1)
-  const [contentRef, contentVisible] = useInView(0.1)
+  const [activeTab, setActiveTab] = useState<string>("developpement");
+  const [animating, setAnimating] = useState<boolean>(false);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [headerRef, headerVisible] = useInView(0.1);
+  const [contentRef, contentVisible] = useInView(0.1);
 
-  const current = servicesData[activeTab]
+  // Utilisation sécurisée de l'indexation par clé dynamique
+  const current = servicesData[activeTab];
 
-  const changeTab = (key) => {
-    if (key === activeTab) return
-    setAnimating(true)
-    setTimeout(() => { setActiveTab(key); setAnimating(false) }, 200)
-  }
+  const changeTab = (key: string) => {
+    if (key === activeTab) return;
+    setAnimating(true);
+    setTimeout(() => { setActiveTab(key); setAnimating(false); }, 200);
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -348,7 +392,7 @@ export default function Services() {
             <div>
               <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Technologies utilisées</h4>
               <div className="flex flex-wrap gap-3">
-                {current.tech.map((t, i) => (
+                {current.tech.map((t: string, i: number) => (
                   <span key={i} className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-xl text-sm font-semibold text-gray-700 border border-gray-200">
                     <i className="ti ti-stack text-base" style={{ color: current.accent }} />
                     {t}
@@ -379,7 +423,7 @@ export default function Services() {
               <h3 className="text-base font-bold text-gray-800">Ce que nous offrons</h3>
             </div>
             <ul className="space-y-3">
-              {current.offres.map((offre, i) => (
+              {current.offres.map((offre: string, i: number) => (
                 <li key={i} className="flex items-start gap-3">
                   <div className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${current.accent}20` }}>
                     <svg className="w-3 h-3" style={{ color: current.accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -407,5 +451,5 @@ export default function Services() {
         </div>
       </div>
     </div>
-  )
+  );
 }
