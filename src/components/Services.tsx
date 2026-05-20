@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
 // Vos imports d'images restent inchangés
 import logo13 from "../assets/logo13.jpg";
 import logo8 from "../assets/logo8.jpg";
@@ -11,8 +12,15 @@ import rapide from "../assets/rapide.png";
 import solution from "../assets/solution.png";
 import approche from "../assets/approche.jpeg";
 
+// Interface pour structurer les cartes d'expertises et de valeurs
+interface CardItem {
+  img: string;
+  title: string;
+  desc: string;
+}
+
 // ==================== DONNÉES AMÉLIORÉES ====================
-const services = [
+const services: CardItem[] = [
   {
     img: logodev,
     title: "Ingénierie Logicielle",
@@ -45,7 +53,7 @@ const services = [
   },
 ];
 
-const valeurs = [
+const valeurs: CardItem[] = [
   {
     img: exellent,
     title: "Excellence & Maîtrise",
@@ -70,19 +78,28 @@ const valeurs = [
 
 // ==================== COMPOSANTS RÉUTILISABLES ====================
 
-function FadeInSection({ children, delay = 0 }) {
+interface FadeInSectionProps {
+  children: React.ReactNode;
+  delay?: number;
+}
+
+function FadeInSection({ children, delay = 0 }: FadeInSectionProps) {
   const [isVisible, setVisible] = useState(false);
   const domRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const currentRef = domRef.current;
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) setVisible(true);
       });
     }, { threshold: 0.1 });
     
-    if (domRef.current) observer.observe(domRef.current);
-    return () => observer.disconnect();
+    if (currentRef) observer.observe(currentRef);
+    return () => {
+      if (currentRef) observer.unobserve(currentRef);
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -102,7 +119,6 @@ function FadeInSection({ children, delay = 0 }) {
 
 export default function ServicesAndValues() {
   return (
-    // L'identifiant clé est placé ici pour cibler le scroll automatique depuis le Hero
     <div id="services-section" className="font-sans relative z-10">
       
       {/* SECTION SERVICES */}

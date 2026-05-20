@@ -1,6 +1,6 @@
 import { useState } from "react";
 // Importation de l'interface Produit depuis ton AdminDashboard pour garder une seule source de vérité
-import { Produit } from "./AdminDashboard";
+import type { Produit } from "./AdminDashboard";
 
 // 1. Définition de la structure d'un article présent dans le panier
 interface ProduitPanier extends Produit {
