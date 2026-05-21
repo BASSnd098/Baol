@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 // Vos imports d'images restent inchangés
 import maintenance from "../assets/maintenance.jpeg";
-import logo8 from "../assets/logo8.jpg";
+import reseaux from "../assets/reseaux.jpg";
 import logocloud from "../assets/logocloud.jpg";
 import logodev from "../assets/logodev.jpg";
 import logoia from "../assets/logoia.jpeg";
@@ -47,7 +47,7 @@ const services: CardItem[] = [
     desc: "Maintenance préventive et corrective, dépannage technique et assistance professionnelle pour garantir la continuité de vos activités.",
   },
   {
-    img: logo8,
+    img: reseaux,
     title: "Installation & Solutions Technologiques",
     desc: "Installation de réseaux, équipements informatiques, vidéosurveillance et solutions technologiques adaptées aux entreprises et particuliers.",
   },
