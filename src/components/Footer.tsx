@@ -11,11 +11,12 @@ export default function Footer() {
   ];
 
   const services = [
+    "Maintenance Informatique",
+    "Cybersécurité & DevOps",
+    "Administration Réseaux",
     "Développement Web",
-    "Applications Mobile",
-    "Infrastructure Cloud",
-    "Cybersécurité",
-    "Intelligence Artificielle (IA)",
+    "Support Technique",
+    "Vente de matériel informatique",
   ];
 
   return (

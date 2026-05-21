@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 // Vos imports d'images restent inchangés
-import logo13 from "../assets/logo13.jpg";
+import maintenance from "../assets/maintenance.jpeg";
 import logo8 from "../assets/logo8.jpg";
 import logocloud from "../assets/logocloud.jpg";
 import logodev from "../assets/logodev.jpg";
@@ -23,56 +23,56 @@ interface CardItem {
 const services: CardItem[] = [
   {
     img: logodev,
-    title: "Ingénierie Logicielle",
-    desc: "Développement de plateformes web innovantes (React, Next.js) et applications métiers sur mesure.",
+    title: "Développement Web & Applications",
+    desc: "Création de plateformes web modernes, applications métiers et solutions digitales performantes adaptées à vos besoins.",
   },
   {
     img: logoia,
-    title: "IA & Automatisation",
-    desc: "Intégration d'intelligence artificielle (Ollama) pour l'optimisation des flux de travail.",
+    title: "Automatisation & Solutions IA",
+    desc: "Optimisation des processus grâce à l’automatisation intelligente et l’intégration de solutions basées sur l’intelligence artificielle.",
   },
   {
     img: logocloud,
-    title: "DevOps & Infrastructure",
-    desc: "Déploiement continu, scalabilité cloud et gestion de serveurs haute performance.",
+    title: "Réseaux, Cloud & DevOps",
+    desc: "Déploiement, administration et sécurisation d’infrastructures réseau et cloud avec des solutions DevOps modernes et évolutives.",
   },
   {
     img: logo88,
-    title: "Cybersécurité Avancée",
-    desc: "Surveillance SOC intelligente (Wazuh), audits de vulnérabilité et protection des données.",
+    title: "Cybersécurité & Protection des Données",
+    desc: "Audit, surveillance, détection des menaces et sécurisation des systèmes pour protéger efficacement vos infrastructures numériques.",
   },
   {
-    img: logo13,
-    title: "Ingénierie Hardware",
-    desc: "Maintenance électronique de précision et diagnostic d'équipements informatiques critiques.",
+    img: maintenance,
+    title: "Maintenance & Support Informatique",
+    desc: "Maintenance préventive et corrective, dépannage technique et assistance professionnelle pour garantir la continuité de vos activités.",
   },
   {
     img: logo8,
-    title: "Conseil & Sourcing IT",
-    desc: "Consulting stratégique et vente de matériel informatique premium (Dell XPS, serveurs).",
+    title: "Installation & Solutions Technologiques",
+    desc: "Installation de réseaux, équipements informatiques, vidéosurveillance et solutions technologiques adaptées aux entreprises et particuliers.",
   },
 ];
 
 const valeurs: CardItem[] = [
   {
     img: exellent,
-    title: "Excellence & Maîtrise",
-    desc: "Expertise technique validée par une Licence en Cybersécurité & DevOps et un BTS en Électronique.",
+    title: "Excellence & maîtrise technique",
+    desc: "Nos experts en cybersécurité, DevOps, cloud et maintenance informatique assurent la sécurité, la performance et le dépannage de vos infrastructures grâce à une expertise technique et une veille technologique continue.",
   },
   {
     img: approche,
-    title: "Proximité & Agilité",
-    desc: "Basés à Mermoz, nous intervenons avec réactivité pour des solutions parfaitement adaptées à vos besoins.",
+    title: "Approche sur mesure & proximité client",
+    desc: "Chaque projet est unique. Nous adaptons nos méthodes à vos besoins métiers afin de proposer des solutions parfaitement alignées avec vos objectifs et contraintes.",
   },
   {
     img: solution,
-    title: "Sécurité par Design",
-    desc: "La sécurité n'est pas une option, elle est intégrée nativement dans chaque ligne de code et chaque montage.",
+    title: "Solutions innovantes et sécurisées",
+    desc: "Nous appliquons les meilleures pratiques DevSecOps afin de garantir un équilibre optimal entre innovation, performance et sécurité.",
   },
   {
     img: rapide,
-    title: "Disponibilité Totale",
-    desc: "Support technique professionnel et maintenance préventive pour garantir la continuité de vos activités.",
+    title: "Disponibilité & engagement 24/7",
+    desc: "Nos équipes assurent une supervision proactive et une maintenance continue pour garantir la disponibilité et la sécurité de vos systèmes.",
   },
 ];
 
