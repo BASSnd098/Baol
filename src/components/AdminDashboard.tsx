@@ -1,471 +1,502 @@
-import { useState, useMemo, type ChangeEvent } from "react";
+// src/components/AdminDashboard.tsx
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
+  PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
+import { createProduct, updateProduct, deleteProduct } from "../api/api.js";
+import { useAuth } from "../context/AuthContext";
 
-const COLORS = ["#2563EB", "#7C3AED", "#0D9488", "#DC2626", "#D97706", "#059669"];
+const NAVY = "#02101f";
+const BLUE = "#1a6cff";
+const CHART_COLORS = ["#1a6cff","#7C3AED","#0D9488","#DC2626","#D97706","#059669"];
+const ALL_CATEGORIES = ["Ordinateurs","IoT","Réseaux","Sécurité","Stockage","Logiciels"];
+const FILTER_CATEGORIES = ["Tous", ...ALL_CATEGORIES];
+const fmt = (n) => Number(n || 0).toLocaleString("fr-FR") + " FCFA";
 
-const formatPrix = (p: number): string => p.toLocaleString("fr-FR") + " FCFA";
+const GLOBAL_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{--navy:#02101f;--blue:#1a6cff;--blue-light:#E8F0FF;--gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;--gray-700:#374151;--gray-900:#111827;}
+  body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-900);}
+  .fade-in{animation:fadeIn 0.3s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .card{background:white;border-radius:16px;border:1px solid var(--gray-200);box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+  .input{width:100%;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:10px;font-family:inherit;font-size:14px;color:var(--gray-900);background:white;outline:none;transition:border 0.15s;}
+  .input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,108,255,0.1);}
+  .btn-primary{background:var(--navy);color:white;border:none;padding:10px 20px;border-radius:50px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:background 0.15s,transform 0.1s;}
+  .btn-primary:hover:not(:disabled){background:var(--blue);}
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-primary:active:not(:disabled){transform:scale(0.97);}
+  .btn-ghost{background:transparent;border:1.5px solid var(--gray-200);color:var(--gray-500);padding:9px 18px;border-radius:50px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;}
+  .btn-ghost:hover{border-color:var(--gray-400);color:var(--gray-700);}
+  .icon-btn{background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:8px;transition:background 0.12s;font-size:15px;line-height:1;}
+  .icon-btn:hover{background:var(--gray-100);}
+  .badge{display:inline-block;padding:2px 9px;border-radius:50px;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;}
+  select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-thumb{background:#c8cdd4;border-radius:3px;}
+  .row-hover:hover{background:var(--gray-50);}
+  .spec-row:not(:last-child){border-bottom:1px solid var(--gray-100);}
+`;
 
-// ─── INTERFACES TYPES ──────────────────────────────────────
-export interface Produit {
-  id: number;
-  nom: string;
-  prix: number;
-  categorie: string;
-  description: string;
-  img: string;
-  stock: boolean;
-}
-
-interface CommandeData {
-  jour: string;
-  ventes: number;
-  revenus: number;
-}
-
-interface CategorieData {
-  name: string;
-  value: number;
-}
-
-interface FormState {
-  nom: string;
-  prix: string;
-  categorie: string;
-  description: string;
-  img: string;
-}
-
-// Génère des fausses commandes pour les graphiques
-const genererCommandes = (produits: Produit[]): CommandeData[] => {
-  if (!produits.length) return [];
-  const jours = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-  return jours.map((jour) => ({
-    jour,
-    ventes: Math.floor(Math.random() * 8) + 1,
-    revenus: Math.floor(Math.random() * 500000) + 50000,
-  }));
-};
-
-// ─── KPI CARD ──────────────────────────────────────────────
-interface KpiCardProps {
-  label: string;
-  value: string | number;
-  icon: string;
-  color: string;
-  sub?: string;
-}
-
-function KpiCard({ label, value, icon, color, sub }: KpiCardProps) {
+// ─── KPI CARD ─────────────────────────────────────────────────────────────────
+function KpiCard({ label, value, icon, accent, sub }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: color + "18" }}>
-        {icon}
-      </div>
+    <div className="card" style={{ padding:"18px 20px", display:"flex", alignItems:"center", gap:14 }}>
+      <div style={{ width:46, height:46, borderRadius:12, background:accent+"18", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}>{icon}</div>
       <div>
-        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">{label}</p>
-        <p className="text-2xl font-black text-gray-900">{value}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+        <p style={{ fontSize:11, fontWeight:600, color:"var(--gray-400)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:2 }}>{label}</p>
+        <p style={{ fontSize:20, fontWeight:800, fontFamily:"'Syne',sans-serif", color:"var(--gray-900)", lineHeight:1 }}>{value}</p>
+        {sub && <p style={{ fontSize:11, color:"var(--gray-400)", marginTop:3 }}>{sub}</p>}
       </div>
     </div>
   );
 }
 
-// ─── ONGLET STATISTIQUES ───────────────────────────────────
-interface StatistiquesProps {
-  produits: Produit[];
-}
-
-function Statistiques({ produits }: StatistiquesProps) {
-  const commandes = useMemo(() => genererCommandes(produits), [produits.length]);
+// ─── STATISTIQUES ─────────────────────────────────────────────────────────────
+function Statistiques({ produits }) {
+  const jours = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+  const commandes = useMemo(() => jours.map(j => ({
+    jour: j,
+    ventes:  Math.floor(Math.random() * 8) + 1,
+    revenus: Math.floor(Math.random() * 500000) + 50000,
+  })), []);
 
   const totalProduits = produits.length;
-  const enStock = produits.filter((p) => p.stock).length;
-  const enRupture = produits.filter((p) => !p.stock).length;
-  const totalCommandes = commandes.reduce((acc, j) => acc + j.ventes, 0);
-  const revenusEstimes = commandes.reduce((acc, j) => acc + j.revenus, 0);
-
-  // Produits les plus chers (simulation "plus vendus")
-  const plusVendus = [...produits]
-    .sort((a, b) => b.prix - a.prix)
-    .slice(0, 5)
-    .map((p) => ({ 
-      nom: p.nom.length > 18 ? p.nom.slice(0, 18) + "…" : p.nom, 
-      ventes: Math.floor(Math.random() * 20) + 1 
-    }));
-
-  // Répartition par catégorie
-  const parCategorie = useMemo<CategorieData[]>(() => {
-    const map: Record<string, number> = {};
-    produits.forEach((p) => { map[p.categorie] = (map[p.categorie] || 0) + 1; });
+  const enStock   = produits.filter(p => p.stock).length;
+  const enRupture = produits.filter(p => !p.stock).length;
+  const totalVentes  = commandes.reduce((a, j) => a + j.ventes, 0);
+  const totalRevenus = commandes.reduce((a, j) => a + j.revenus, 0);
+  const plusVendus = [...produits].sort((a, b) => b.prix - a.prix).slice(0, 5).map(p => ({
+    nom: p.nom.length > 20 ? p.nom.slice(0, 20) + "…" : p.nom,
+    ventes: Math.floor(Math.random() * 20) + 1,
+  }));
+  const parCategorie = useMemo(() => {
+    const map = {};
+    produits.forEach(p => { map[p.categorie] = (map[p.categorie] || 0) + 1; });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [produits]);
+  const tt = { borderRadius:10, border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.1)", fontSize:13, fontFamily:"'DM Sans',sans-serif" };
 
   return (
-    <div className="space-y-8">
-      {/* KPI */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <KpiCard label="Total produits" value={totalProduits} icon="📦" color="#2563EB" />
-        <KpiCard label="En stock" value={enStock} icon="✅" color="#059669" sub={`${Math.round((enStock / totalProduits || 0) * 100)}% du catalogue`} />
-        <KpiCard label="En rupture" value={enRupture} icon="❌" color="#DC2626" />
-        <KpiCard label="Commandes (sem.)" value={totalCommandes} icon="🛒" color="#7C3AED" />
-        <KpiCard label="Revenus estimés" value={formatPrix(revenusEstimes)} icon="💰" color="#D97706" sub="Cette semaine" />
+    <div className="fade-in" style={{ display:"flex", flexDirection:"column", gap:24 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:14 }}>
+        <KpiCard label="Total produits"  value={totalProduits} icon="📦" accent={BLUE} />
+        <KpiCard label="En stock"        value={enStock}   icon="✅" accent="#059669" sub={`${totalProduits ? Math.round(enStock/totalProduits*100) : 0}% du catalogue`} />
+        <KpiCard label="En rupture"      value={enRupture} icon="⚠️" accent="#DC2626" />
+        <KpiCard label="Ventes semaine"  value={totalVentes}  icon="🛒" accent="#7C3AED" />
+        <KpiCard label="Revenus estimés" value={fmt(totalRevenus)} icon="💰" accent="#D97706" sub="Cette semaine" />
       </div>
-
-      {/* Graphiques ligne 1 */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Ventes par jour */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-1">Ventes par jour</h3>
-          <p className="text-xs text-gray-400 mb-5">Cette semaine</p>
-          <ResponsiveContainer width="100%" height={220}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+        <div className="card" style={{ padding:"20px 22px" }}>
+          <p style={{ fontSize:14, fontWeight:700, marginBottom:2, fontFamily:"'Syne',sans-serif" }}>Ventes par jour</p>
+          <p style={{ fontSize:11, color:"var(--gray-400)", marginBottom:18 }}>Cette semaine</p>
+          <ResponsiveContainer width="100%" height={200}>
             <LineChart data={commandes}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="jour" tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", fontSize: "13px" }}
-                formatter={(v) => [v, "Ventes"]}
-              />
-              <Line type="monotone" dataKey="ventes" stroke="#2563EB" strokeWidth={2.5} dot={{ fill: "#2563EB", r: 4 }} activeDot={{ r: 6 }} />
+              <XAxis dataKey="jour" tick={{ fontSize:11, fill:"#9CA3AF" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize:11, fill:"#9CA3AF" }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={tt} formatter={v => [v,"Ventes"]} />
+              <Line type="monotone" dataKey="ventes" stroke={BLUE} strokeWidth={2.5} dot={{ fill:BLUE, r:3.5 }} activeDot={{ r:5 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Revenus par jour */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-1">Revenus par jour</h3>
-          <p className="text-xs text-gray-400 mb-5">En FCFA</p>
-          <ResponsiveContainer width="100%" height={220}>
+        <div className="card" style={{ padding:"20px 22px" }}>
+          <p style={{ fontSize:14, fontWeight:700, marginBottom:2, fontFamily:"'Syne',sans-serif" }}>Revenus par jour</p>
+          <p style={{ fontSize:11, color:"var(--gray-400)", marginBottom:18 }}>En FCFA</p>
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={commandes}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="jour" tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} tickFormatter={(v) => (v / 1000) + "k"} />
-              <Tooltip
-                contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", fontSize: "13px" }}
-                formatter={(v) => [typeof v === "number" ? v.toLocaleString("fr-FR") + " FCFA" : v, "Revenus"]}
-              />
-              <Bar dataKey="revenus" fill="#2563EB" radius={[6, 6, 0, 0]} />
+              <XAxis dataKey="jour" tick={{ fontSize:11, fill:"#9CA3AF" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize:11, fill:"#9CA3AF" }} axisLine={false} tickLine={false} tickFormatter={v => (v/1000)+"k"} />
+              <Tooltip contentStyle={tt} formatter={v => [typeof v==="number" ? v.toLocaleString("fr-FR")+" FCFA" : v,"Revenus"]} />
+              <Bar dataKey="revenus" fill={BLUE} radius={[5,5,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
-
-      {/* Graphiques ligne 2 */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Produits les plus vendus */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-1">Produits les plus vendus</h3>
-          <p className="text-xs text-gray-400 mb-5">Top 5</p>
-          {plusVendus.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-10">Aucun produit encore</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={plusVendus} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="nom" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} width={100} />
-                <Tooltip
-                  contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", fontSize: "13px" }}
-                  formatter={(v) => [v, "Ventes"]}
-                />
-                <Bar dataKey="ventes" radius={[0, 6, 6, 0]}>
-                  {plusVendus.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Répartition par catégorie */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-1">Répartition par catégorie</h3>
-          <p className="text-xs text-gray-400 mb-5">Nombre de produits</p>
-          {parCategorie.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-10">Aucun produit encore</p>
-          ) : (
-            <div className="flex flex-col md:flex-row items-center gap-4">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={parCategorie} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
-                    {parCategorie.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", fontSize: "13px" }}
-                    formatter={(v, n) => [v + " produit(s)", n]}
-                  />
-                </PieChart>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+        <div className="card" style={{ padding:"20px 22px" }}>
+          <p style={{ fontSize:14, fontWeight:700, marginBottom:2, fontFamily:"'Syne',sans-serif" }}>Produits les plus vendus</p>
+          <p style={{ fontSize:11, color:"var(--gray-400)", marginBottom:18 }}>Top 5</p>
+          {plusVendus.length === 0
+            ? <p style={{ textAlign:"center", padding:"40px 0", color:"var(--gray-400)", fontSize:13 }}>Aucun produit</p>
+            : <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={plusVendus} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize:11, fill:"#9CA3AF" }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="nom" tick={{ fontSize:10, fill:"#6B7280" }} axisLine={false} tickLine={false} width={110} />
+                  <Tooltip contentStyle={tt} formatter={v => [v,"Ventes"]} />
+                  <Bar dataKey="ventes" radius={[0,5,5,0]}>
+                    {plusVendus.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
-              <div className="flex flex-col gap-2 min-w-[120px]">
-                {parCategorie.map((entry, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                    <span className="text-xs text-gray-600 font-medium">{entry.name}</span>
-                    <span className="text-xs text-gray-400 ml-auto">{entry.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          }
         </div>
-      </div>
-
-      {/* Tableau récap stock */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-base font-bold text-gray-800 mb-5">Récapitulatif du stock</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Produit</th>
-                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Catégorie</th>
-                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Prix</th>
-                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Stock</th>
-              </tr>
-            </thead>
-            <tbody>
-              {produits.map((p) => (
-                <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-3 font-medium text-gray-800">{p.nom}</td>
-                  <td className="py-3 px-3 text-gray-500">{p.categorie}</td>
-                  <td className="py-3 px-3 font-semibold text-blue-600">{formatPrix(p.prix)}</td>
-                  <td className="py-3 px-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${p.stock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                      {p.stock ? "En stock" : "Rupture"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {produits.length === 0 && (
-            <p className="text-center text-gray-400 text-sm py-8">Aucun produit dans le catalogue</p>
-          )}
+        <div className="card" style={{ padding:"20px 22px" }}>
+          <p style={{ fontSize:14, fontWeight:700, marginBottom:2, fontFamily:"'Syne',sans-serif" }}>Répartition par catégorie</p>
+          <p style={{ fontSize:11, color:"var(--gray-400)", marginBottom:14 }}>Nombre de produits</p>
+          {parCategorie.length === 0
+            ? <p style={{ textAlign:"center", padding:"40px 0", color:"var(--gray-400)", fontSize:13 }}>Aucun produit</p>
+            : <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+                <ResponsiveContainer width="55%" height={180}>
+                  <PieChart>
+                    <Pie data={parCategorie} cx="50%" cy="50%" innerRadius={48} outerRadius={76} paddingAngle={3} dataKey="value">
+                      {parCategorie.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={tt} formatter={(v, n) => [v+" produit(s)", n]} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                  {parCategorie.map((e, i) => (
+                    <div key={i} style={{ display:"flex", alignItems:"center", gap:7 }}>
+                      <div style={{ width:10, height:10, borderRadius:"50%", background:CHART_COLORS[i % CHART_COLORS.length], flexShrink:0 }} />
+                      <span style={{ fontSize:11, fontWeight:500 }}>{e.name}</span>
+                      <span style={{ fontSize:11, color:"var(--gray-400)", marginLeft:"auto" }}>{e.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+          }
         </div>
       </div>
     </div>
   );
 }
 
-// ─── DASHBOARD PRINCIPAL ───────────────────────────────────
-interface AdminDashboardProps {
-  produits: Produit[];
-  setProduits: (produits: Produit[]) => void;
+// ─── SPECS EDITOR ─────────────────────────────────────────────────────────────
+function SpecsEditor({ specs, onChange }) {
+  const entries = Object.entries(specs || {});
+  const addRow = () => onChange({ ...specs, "": "" });
+  const updateKey = (oldKey, newKey) => {
+    const u = {};
+    Object.entries(specs).forEach(([k, v]) => { u[k === oldKey ? newKey : k] = v; });
+    onChange(u);
+  };
+  const updateVal = (key, val) => onChange({ ...specs, [key]: val });
+  const removeRow = (key) => { const s = { ...specs }; delete s[key]; onChange(s); };
+  return (
+    <div style={{ border:"1.5px solid var(--gray-200)", borderRadius:10, overflow:"hidden" }}>
+      {entries.length === 0 && <p style={{ padding:"12px 14px", fontSize:12, color:"var(--gray-400)" }}>Aucune caractéristique.</p>}
+      {entries.map(([k, v], i) => (
+        <div key={i} className="spec-row" style={{ display:"flex" }}>
+          <input value={k} onChange={e => updateKey(k, e.target.value)} placeholder="Clé" style={{ flex:1, padding:"8px 10px", border:"none", borderRight:"1px solid var(--gray-200)", fontSize:12, fontFamily:"inherit", outline:"none", background:"var(--gray-50)", fontWeight:600 }} />
+          <input value={v} onChange={e => updateVal(k, e.target.value)} placeholder="Valeur" style={{ flex:2, padding:"8px 10px", border:"none", borderRight:"1px solid var(--gray-200)", fontSize:12, fontFamily:"inherit", outline:"none" }} />
+          <button className="icon-btn" onClick={() => removeRow(k)} style={{ padding:"6px 10px", color:"#ef4444", borderRadius:0 }}>✕</button>
+        </div>
+      ))}
+      <div style={{ borderTop: entries.length > 0 ? "1px solid var(--gray-200)" : "none" }}>
+        <button onClick={addRow} style={{ width:"100%", padding:8, background:"none", border:"none", cursor:"pointer", fontSize:12, color:BLUE, fontWeight:600, fontFamily:"inherit" }}>+ Ajouter</button>
+      </div>
+    </div>
+  );
 }
 
-export default function AdminDashboard({ produits, setProduits }: AdminDashboardProps) {
-  const [onglet, setOnglet] = useState<"produits" | "stats">("produits");
-  const [form, setForm] = useState<FormState>({ nom: "", prix: "", categorie: "Ordinateurs", description: "", img: "" });
-  const [preview, setPreview] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filterCategorie, setFilterCategorie] = useState<string>("Tous");
-  const [editingId, setEditingId] = useState<number | null>(null);
-
-  const categories = ["Tous", "Ordinateurs", "IoT", "Sécurité", "Réseaux", "Stockage"];
-
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+// ─── IMAGES EDITOR ────────────────────────────────────────────────────────────
+function ImagesEditor({ images, onChange }) {
+  const imgs = images || [];
+  const addUrl    = () => onChange([...imgs, ""]);
+  const updateUrl = (i, v) => { const a = [...imgs]; a[i] = v; onChange(a); };
+  const removeUrl = (i) => onChange(imgs.filter((_, idx) => idx !== i));
+  const handleFile = (e, i) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { alert("Image invalide"); return; }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result;
-      if (typeof base64 === "string") { 
-        setPreview(base64); 
-        setForm({ ...form, img: base64 }); 
-      }
-    };
-    reader.readAsDataURL(file);
+    if (!file || !file.type.startsWith("image/")) return;
+    const r = new FileReader();
+    r.onload = ev => { if (typeof ev.target?.result === "string") updateUrl(i, ev.target.result); };
+    r.readAsDataURL(file);
+  };
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+      {imgs.map((url, i) => (
+        <div key={i} style={{ display:"flex", gap:8, alignItems:"center" }}>
+          {url && <img src={url} alt="" style={{ width:44, height:40, objectFit:"cover", borderRadius:8, flexShrink:0, border:"1px solid var(--gray-200)" }} />}
+          <input className="input" value={!url.startsWith("data:") ? url : ""} onChange={e => updateUrl(i, e.target.value)} placeholder="URL image" style={{ flex:1, fontSize:12 }} />
+          <label style={{ cursor:"pointer", padding:"8px 12px", border:"1.5px solid var(--gray-200)", borderRadius:8, fontSize:11, fontWeight:600, color:"var(--gray-500)", whiteSpace:"nowrap" }}>
+            📁<input type="file" accept="image/*" style={{ display:"none" }} onChange={e => handleFile(e, i)} />
+          </label>
+          <button className="icon-btn" onClick={() => removeUrl(i)} style={{ color:"#ef4444" }}>✕</button>
+        </div>
+      ))}
+      <button onClick={addUrl} style={{ padding:"8px 14px", background:"#E8F0FF", border:"none", borderRadius:8, fontSize:12, fontWeight:600, color:BLUE, cursor:"pointer", fontFamily:"inherit", alignSelf:"flex-start" }}>+ Ajouter une image</button>
+    </div>
+  );
+}
+
+// ─── PRODUIT FORM ─────────────────────────────────────────────────────────────
+function ProduitForm({ editTarget, onSave, onCancel, saving }) {
+  const isEdit = !!editTarget;
+  const [form, setForm] = useState({
+    nom:         editTarget?.nom         || "",
+    prix:        editTarget?.prix        ? String(editTarget.prix) : "",
+    categorie:   editTarget?.categorie   || "Ordinateurs",
+    description: editTarget?.description || "",
+    stock:       editTarget?.stock       ?? true,
+    img:         editTarget?.img         || "",
+    images:      editTarget?.images      || [],
+    specs:       editTarget?.specs       || {},
+  });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleMainFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const r = new FileReader();
+    r.onload = ev => { if (typeof ev.target?.result === "string") set("img", ev.target.result); };
+    r.readAsDataURL(file);
   };
 
   const handleSubmit = () => {
-    if (!form.nom || !form.prix) { alert("Nom et prix obligatoires"); return; }
-    const nouveau: Produit = {
-      id: editingId || Date.now(),
-      nom: form.nom,
-      categorie: form.categorie,
-      description: form.description,
-      prix: Number(form.prix),
-      img: form.img || "https://via.placeholder.com/300x200?text=Baol_Technologies",
-      stock: true,
-    };
-    if (editingId) {
-      setProduits(produits.map((p) => (p.id === editingId ? nouveau : p)));
-      setEditingId(null);
-    } else {
-      setProduits([nouveau, ...produits]);
-    }
-    resetForm();
+    if (!form.nom.trim() || !form.prix) { alert("Nom et prix sont obligatoires."); return; }
+    onSave({
+      id:          editTarget?.id || "",
+      nom:         form.nom.trim(),
+      prix:        Number(form.prix),
+      categorie:   form.categorie,
+      description: form.description.trim(),
+      stock:       form.stock,
+      img:         form.img || "https://via.placeholder.com/600x400?text=Baol_Technologies",
+      images:      form.images.filter(Boolean),
+      specs:       form.specs,
+    });
   };
 
-  const resetForm = () => {
-    setForm({ nom: "", prix: "", categorie: "Ordinateurs", description: "", img: "" });
-    setPreview(null);
-    setEditingId(null);
-  };
-
-  const supprimer = (id: number) => {
-    if (window.confirm("Supprimer ce produit ?")) setProduits(produits.filter((p) => p.id !== id));
-  };
-
-  const editProduit = (produit: Produit) => {
-    setForm({ nom: produit.nom, prix: String(produit.prix), categorie: produit.categorie, description: produit.description || "", img: produit.img || "" });
-    setPreview(produit.img);
-    setEditingId(produit.id);
-    setOnglet("produits");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const toggleStock = (id: number) => {
-    setProduits(produits.map((p) => (p.id === id ? { ...p, stock: !p.stock } : p)));
-  };
-
-  const filteredProduits = useMemo(() => {
-    return produits
-      .filter((p) => {
-        const matchesSearch = p.nom.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = filterCategorie === "Tous" || p.categorie === filterCategorie;
-        return matchesSearch && matchesCategory;
-      })
-      .sort((a, b) => b.id - a.id);
-  }, [produits, searchTerm, filterCategorie]);
+  const Sec = ({ title, children }) => (
+    <div style={{ marginBottom:20 }}>
+      <p style={{ fontSize:11, fontWeight:700, color:"var(--gray-400)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:10 }}>{title}</p>
+      {children}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="card fade-in" style={{ padding:"24px 28px", marginBottom:28 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}>
+        <h2 style={{ fontSize:18, fontWeight:800, fontFamily:"'Syne',sans-serif" }}>{isEdit ? "✏️ Modifier le produit" : "➕ Nouveau produit"}</h2>
+        <button className="btn-ghost" onClick={onCancel} style={{ fontSize:12 }}>Annuler</button>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:28 }}>
+        <div>
+          <Sec title="Image principale">
+            <div style={{ borderRadius:12, overflow:"hidden", background:"var(--gray-100)", height:200, marginBottom:10 }}>
+              {form.img
+                ? <img src={form.img} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                : <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", color:"var(--gray-400)" }}><span style={{ fontSize:32 }}>🖼️</span></div>}
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <input className="input" value={form.img && !form.img.startsWith("data:") ? form.img : ""} onChange={e => set("img", e.target.value)} placeholder="URL image principale" style={{ fontSize:12 }} />
+              <label style={{ cursor:"pointer", padding:"8px 12px", border:"1.5px solid var(--gray-200)", borderRadius:8, fontSize:11, fontWeight:600, color:"var(--gray-500)", display:"flex", alignItems:"center" }}>
+                📁<input type="file" accept="image/*" style={{ display:"none" }} onChange={handleMainFile} />
+              </label>
+            </div>
+          </Sec>
+          <Sec title="Galerie">
+            <ImagesEditor images={form.images} onChange={v => set("images", v)} />
+          </Sec>
+        </div>
+        <div>
+          <Sec title="Informations produit">
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              <input className="input" value={form.nom} onChange={e => set("nom", e.target.value)} placeholder="Nom du produit *" />
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                <input className="input" type="number" value={form.prix} onChange={e => set("prix", e.target.value)} placeholder="Prix en FCFA *" />
+                <select className="input" value={form.categorie} onChange={e => set("categorie", e.target.value)}>
+                  {ALL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <textarea className="input" value={form.description} onChange={e => set("description", e.target.value)} placeholder="Description du produit" rows={3} style={{ resize:"vertical" }} />
+              <label style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer", padding:"10px 14px", borderRadius:10, border:"1.5px solid var(--gray-200)", background:form.stock ? "#d1fae530" : "#fee2e230" }}>
+                <input type="checkbox" checked={form.stock} onChange={e => set("stock", e.target.checked)} style={{ accentColor:form.stock ? "#059669" : "#ef4444", width:16, height:16 }} />
+                <span style={{ fontSize:13, fontWeight:600, color:form.stock ? "#059669" : "#ef4444" }}>{form.stock ? "✓ En stock" : "✕ Rupture de stock"}</span>
+              </label>
+            </div>
+          </Sec>
+          <Sec title="Caractéristiques techniques">
+            <SpecsEditor specs={form.specs} onChange={v => set("specs", v)} />
+          </Sec>
+        </div>
+      </div>
+      <div style={{ display:"flex", gap:10, marginTop:20, justifyContent:"flex-end" }}>
+        <button className="btn-ghost" onClick={onCancel}>Annuler</button>
+        <button className="btn-primary" onClick={handleSubmit} disabled={saving} style={{ padding:"11px 28px" }}>
+          {saving ? "Enregistrement…" : isEdit ? "Mettre à jour" : "Ajouter le produit"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
-        {/* HEADER */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight">
-              ADMIN <span className="text-blue-600">PANEL</span>
-            </h1>
-            <p className="text-gray-400 text-sm mt-1">{produits.length} produit{produits.length > 1 ? "s" : ""} dans le catalogue</p>
-          </div>
-
-          {/* ONGLETS */}
-          <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-            <button
-              onClick={() => setOnglet("produits")}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                onglet === "produits" ? "bg-[#02101f] text-white shadow" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              📦 Produits
-            </button>
-            <button
-              onClick={() => setOnglet("stats")}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                onglet === "stats" ? "bg-[#02101f] text-white shadow" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              📊 Statistiques
-            </button>
+// ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
+function AdminProductCard({ produit: p, onEdit, onDelete, onToggleStock }) {
+  return (
+    <div className="card" style={{ overflow:"hidden", display:"flex", flexDirection:"column", transition:"box-shadow 0.2s,transform 0.2s" }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow="0 8px 24px rgba(26,108,255,0.1)"; e.currentTarget.style.transform="translateY(-2px)"; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow=""; e.currentTarget.style.transform=""; }}>
+      <div style={{ height:180, overflow:"hidden", position:"relative", background:"var(--gray-100)" }}>
+        <img src={p.img || "https://via.placeholder.com/400x200?text=No+Image"} alt={p.nom} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+        <button onClick={() => onToggleStock(p.id)} style={{ position:"absolute", top:10, right:10, padding:"3px 10px", borderRadius:50, border:"none", fontSize:10, fontWeight:700, cursor:"pointer", background:p.stock ? "#059669" : "#ef4444", color:"white" }}>
+          {p.stock ? "En stock" : "Rupture"}
+        </button>
+      </div>
+      <div style={{ padding:"14px 16px", flex:1, display:"flex", flexDirection:"column", gap:6 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+          <span className="badge" style={{ background:"#E8F0FF", color:BLUE }}>{p.categorie}</span>
+          <div style={{ display:"flex", gap:2 }}>
+            <button className="icon-btn" onClick={() => onEdit(p)}>✏️</button>
+            <button className="icon-btn" onClick={() => onDelete(p.id)}>🗑️</button>
           </div>
         </div>
+        <h3 style={{ fontSize:14, fontWeight:700, fontFamily:"'Syne',sans-serif" }}>{p.nom}</h3>
+        {p.description && <p style={{ fontSize:11, color:"var(--gray-500)", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{p.description}</p>}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:"auto", paddingTop:8, borderTop:"1px solid var(--gray-100)" }}>
+          <span style={{ fontSize:15, fontWeight:800, fontFamily:"'Syne',sans-serif" }}>{fmt(p.prix)}</span>
+          <span style={{ fontSize:10, color:"var(--gray-400)" }}>{p.images?.length || 1} img</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* ONGLET STATISTIQUES */}
-        {onglet === "stats" && <Statistiques produits={produits} />}
+// ─── DASHBOARD PRINCIPAL ──────────────────────────────────────────────────────
+export default function AdminDashboard({ produits = [], setProduits, onRefresh }) {
+  const [tab, setTab]               = useState("produits");
+  const [editTarget, setEditTarget] = useState(null);
+  const [showForm, setShowForm]     = useState(false);
+  const [search, setSearch]         = useState("");
+  const [filterCat, setFilterCat]   = useState("Tous");
+  const [apiError, setApiError]     = useState("");
+  const [saving, setSaving]         = useState(false);
 
-        {/* ONGLET PRODUITS */}
-        {onglet === "produits" && (
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+
+
+  
+  // ── Créer ou modifier ─────────────────────────────────────────────────────
+  const handleSave = async (produit) => {
+    setSaving(true);
+    setApiError("");
+    try {
+      const payload = {
+        name:        produit.nom,
+        price:       produit.prix,
+        category:    produit.categorie,
+        description: produit.description,
+        stock:       produit.stock ? 1 : 0,
+        images:      produit.images || [],
+        featured:    false,
+      };
+      if (editTarget) {
+        await updateProduct(produit.id, payload);
+      } else {
+        await createProduct(payload);
+      }
+      await onRefresh();
+      setEditTarget(null);
+      setShowForm(false);
+    } catch (err) {
+      setApiError(err.message || "Erreur lors de la sauvegarde.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Supprimer ─────────────────────────────────────────────────────────────
+  const handleDelete = async (id) => {
+    if (!window.confirm("Supprimer ce produit définitivement ?")) return;
+    try {
+      await deleteProduct(id);
+      await onRefresh();
+    } catch (err) {
+      setApiError(err.message || "Erreur suppression.");
+    }
+  };
+
+  // ── Basculer stock ────────────────────────────────────────────────────────
+  const handleToggleStock = async (id) => {
+    const p = produits.find(p => p.id === id);
+    if (!p) return;
+    try {
+      await updateProduct(id, { stock: p.stock ? 0 : 1 });
+      await onRefresh();
+    } catch (err) {
+      setApiError(err.message || "Erreur stock.");
+    }
+  };
+
+  const handleEdit   = (p) => { setEditTarget(p); setShowForm(true); window.scrollTo({ top:0, behavior:"smooth" }); };
+  const handleCancel = () => { setEditTarget(null); setShowForm(false); setApiError(""); };
+
+  const filtered = useMemo(() => produits.filter(p => {
+    const matchSearch = p.nom?.toLowerCase().includes(search.toLowerCase()) || p.description?.toLowerCase().includes(search.toLowerCase());
+    const matchCat    = filterCat === "Tous" || p.categorie === filterCat;
+    return matchSearch && matchCat;
+  }), [produits, search, filterCat]);
+
+  return (
+    <div style={{ minHeight:"100vh", background:"var(--gray-50)", padding:"24px 24px 80px", marginTop:"80px" }}>
+      <style>{GLOBAL_CSS}</style>
+
+      {/* HEADER */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:28, maxWidth:1240, marginLeft:"auto", marginRight:"auto" }}>
+        <div>
+          <h1 style={{ fontSize:"clamp(22px,4vw,34px)", fontWeight:800, fontFamily:"'Syne',sans-serif", letterSpacing:"-0.03em", lineHeight:1 }}>
+            ADMIN <span style={{ color:BLUE }}>PANEL</span>
+          </h1>
+          <p style={{ fontSize:12, color:"var(--gray-400)", marginTop:4 }}>
+            {user?.email} · {produits.length} produit{produits.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+          <div style={{ display:"flex", background:"white", border:"1px solid var(--gray-200)", borderRadius:12, padding:4, gap:2 }}>
+            {[["produits","📦 Produits"],["stats","📊 Statistiques"]].map(([id, label]) => (
+              <button key={id} onClick={() => setTab(id)} style={{ padding:"8px 18px", borderRadius:9, border:"none", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", transition:"all 0.15s", background:tab===id ? NAVY : "transparent", color:tab===id ? "white" : "var(--gray-500)" }}>{label}</button>
+            ))}
+          </div>
+          <button onClick={() => { logout(); navigate("/admin/login"); }} style={{ padding:"9px 16px", borderRadius:10, border:"1.5px solid var(--gray-200)", background:"white", color:"var(--gray-500)", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
+            🚪 Déconnexion
+          </button>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1240, margin:"0 auto" }}>
+        {/* Erreur API */}
+        {apiError && (
+          <div style={{ background:"#fee2e2", border:"1px solid #fca5a5", borderRadius:10, padding:"12px 16px", marginBottom:16, color:"#dc2626", fontSize:13, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            ⚠️ {apiError}
+            <button onClick={() => setApiError("")} style={{ background:"none", border:"none", cursor:"pointer", fontSize:16, color:"#dc2626" }}>✕</button>
+          </div>
+        )}
+
+        {tab === "stats" && <Statistiques produits={produits} />}
+
+        {tab === "produits" && (
           <>
-            {/* FORMULAIRE */}
-            <div className="bg-white rounded-3xl shadow p-8 mb-10 text-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-gray-900">
-                {editingId ? "✏️ Modifier le produit" : "➕ Ajouter un nouveau produit"}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">Image du produit</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-blue-400 transition-colors">
-                    {preview ? (
-                      <img src={preview} alt="Preview" className="mx-auto max-h-64 object-contain rounded-xl" />
-                    ) : (
-                      <div className="py-10">
-                        <span className="text-4xl mb-3 block">📷</span>
-                        <p className="text-gray-500">Cliquez ou glissez une image</p>
-                      </div>
-                    )}
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="mt-4 file:btn file:btn-primary file:cursor-pointer" />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">Format recommandé : JPG, PNG (max 5MB)</p>
+            {!showForm
+              ? <div style={{ marginBottom:20 }}>
+                  <button className="btn-primary" onClick={() => { setEditTarget(null); setShowForm(true); }} style={{ padding:"11px 24px", fontSize:14 }}>➕ Ajouter un produit</button>
                 </div>
-
-                <div className="space-y-5">
-                  <input type="text" placeholder="Nom du produit" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-blue-400 bg-white text-gray-800 text-sm"
-                    value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} />
-                  <input type="number" placeholder="Prix en FCFA" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-blue-400 bg-white text-gray-800 text-sm"
-                    value={form.prix} onChange={(e) => setForm({ ...form, prix: e.target.value })} />
-                  <select className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-blue-400 bg-white text-gray-800 text-sm"
-                    value={form.categorie} onChange={(e) => setForm({ ...form, categorie: e.target.value })}>
-                    {categories.slice(1).map((cat) => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
-                  <input type="text" placeholder="Description courte" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-blue-400 bg-white text-gray-800 text-sm"
-                    value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                  <div className="flex gap-4 pt-4">
-                    <button onClick={handleSubmit} className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors shadow">
-                      {editingId ? "Mettre à jour" : "Ajouter le produit"}
-                    </button>
-                    {editingId && (
-                      <button onClick={resetForm} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-                        Annuler
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* FILTRES */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <input type="text" placeholder="🔍 Rechercher un produit..." className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-blue-400 bg-white text-gray-800 text-sm flex-1"
-                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-              <select className="px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-blue-400 bg-white text-gray-800 text-sm w-full sm:w-64"
-                value={filterCategorie} onChange={(e) => setFilterCategorie(e.target.value)}>
-                {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+              : <ProduitForm editTarget={editTarget} onSave={handleSave} onCancel={handleCancel} saving={saving} />
+            }
+            <div style={{ display:"flex", gap:10, marginBottom:20, flexWrap:"wrap" }}>
+              <input className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Rechercher…" style={{ flex:1, minWidth:200 }} />
+              <select className="input" value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ width:180 }}>
+                {FILTER_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-
-            {/* LISTE PRODUITS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProduits.map((p) => (
-                <div key={p.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100">
-                  <div className="relative">
-                    <img src={p.img} alt={p.nom} className="w-full h-52 object-cover" />
-                    <button onClick={() => toggleStock(p.id)}
-                      className={`absolute top-4 right-4 px-4 py-1 text-xs font-bold rounded-full ${p.stock ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
-                      {p.stock ? "EN STOCK" : "RUPTURE"}
-                    </button>
-                  </div>
-                  <div className="p-5 text-gray-800">
-                    <div className="flex justify-between items-start gap-2 mb-1">
-                      <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{p.nom}</h3>
-                    </div>
-                    <p className="text-blue-600 text-sm mb-3 font-semibold">{p.categorie}</p>
-                    {p.description && <p className="text-gray-500 text-sm line-clamp-2 mb-4 leading-relaxed">{p.description}</p>}
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                      <p className="text-xl font-black text-gray-900">
-                        {p.prix.toLocaleString()} <span className="text-sm font-normal text-gray-400">FCFA</span>
-                      </p>
-                      <div className="flex gap-2">
-                        <button onClick={() => editProduit(p)} className="p-2 rounded-lg hover:bg-blue-50 text-sm transition-colors" title="Modifier">✏️</button>
-                        <button onClick={() => supprimer(p.id)} className="p-2 rounded-lg hover:bg-red-50 text-sm transition-colors" title="Supprimer">🗑</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:20 }}>
+              {filtered.map(p => (
+                <AdminProductCard key={p.id} produit={p} onEdit={handleEdit} onDelete={handleDelete} onToggleStock={handleToggleStock} />
               ))}
-
-              {filteredProduits.length === 0 && (
-                <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-16 text-gray-400">
-                  <p className="text-4xl mb-3">📭</p>
-                  <p className="text-sm">Aucun produit trouvé</p>
-                </div>
-              )}
             </div>
+            {filtered.length === 0 && (
+              <div className="card" style={{ padding:"60px 20px", textAlign:"center", color:"var(--gray-400)" }}>
+                <span style={{ fontSize:36, display:"block", marginBottom:10 }}>🔍</span>
+                <p style={{ fontSize:14, fontWeight:500 }}>Aucun produit trouvé.</p>
+              </div>
+            )}
           </>
         )}
       </div>

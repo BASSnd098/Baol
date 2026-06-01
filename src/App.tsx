@@ -1,68 +1,100 @@
+// src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import Footer from "./components/Footer";
-import Boutique from "./components/Boutique";
-import AdminDashboard from "./components/AdminDashboard";
-import ServicesSimple from "./components/Services";
-import ServicesDetail from "./components/ServicesAndValues";
+import { AuthProvider }   from "./context/AuthContext";
+import Navbar             from "./components/Navbar";
+import Hero               from "./components/Hero";
+import Footer             from "./components/Footer";
+import Boutique           from "./components/Boutique";
+import AdminDashboard     from "./components/AdminDashboard";
+import AdminLogin         from "./components/AdminLogin";
+import ProtectedRoute     from "./components/ProtectedRoute";
+import ServicesSimple     from "./components/Services";
+import ServicesDetail     from "./components/ServicesAndValues";
+import Apropos            from "./components/Apropos";
+import Contact            from "./components/Contact.tsx";
+import { getProducts }    from "./api/api.js";
 
-// 1. Tes produits par défaut (ceux que tu verras au début)
-const produitsInitiaux = [
-  { 
-    id: 1, 
-    nom: "Dell XPS 15 7590", 
-    prix: 750000, 
-    categorie: "Ordinateurs", 
-    img: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=400",
-    stock: true 
-  },
-  { 
-    id: 2, 
-    nom: "Raspberry Pi 4", 
-    prix: 65000, 
-    categorie: "IoT", 
-    img: "https://images.unsplash.com/photo-1555617766-c94804975da3?w=400",
-    stock: true 
-  }
-];
+// Convertir format API → format frontend
+const formatProduct = (p) => ({
+  id:          p._id,
+  nom:         p.name,
+  prix:        p.price,
+  categorie:   p.category,
+  description: p.description || "",
+  stock:       Number(p.stock) > 0,
+  img:         p.images?.[0] || "https://via.placeholder.com/600x400?text=Baol_Technologies",
+  images:      p.images || [],
+  specs:       p.specs || {},
+});
 
 export default function App() {
-  // 2. Gestion de la mémoire (LocalStorage)
-  const [listeProduits, setListeProduits] = useState(() => {
-    const saved = localStorage.getItem("baol_tech_stock");
-    return saved ? JSON.parse(saved) : produitsInitiaux;
-  });
+  const [listeProduits, setListeProduits] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 3. Sauvegarde automatique dès qu'un produit est ajouté/modifié
-  useEffect(() => {
-    localStorage.setItem("baol_tech_stock", JSON.stringify(listeProduits));
-  }, [listeProduits]);
+  const loadProducts = async () => {
+    try {
+      const response = await getProducts();
+      if (response.success) {
+        setListeProduits(response.products.map(formatProduct));
+      }
+    } catch (error) {
+      console.error("Erreur chargement produits:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadProducts(); }, []);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"sans-serif", color:"#6B7280" }}>
+        <div style={{ textAlign:"center" }}>
+          <div style={{ width:40, height:40, border:"3px solid #E5E7EB", borderTopColor:"#1a6cff", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 12px" }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <p style={{ fontSize:14 }}>Chargement des produits…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Router>
-      <div data-theme="business" className="min-h-screen bg-base-200 flex flex-col">
-        <Navbar />
-        <main className="flex-grow pt-16">
-          <Routes>
-            <Route path="/" element={<><Hero /><ServicesSimple /></>} />
-            <Route path="/services" element={<ServicesDetail />} />
+    <AuthProvider>
+      <Router>
+        <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column" }}>
+          <Navbar />
+          <main style={{ flexGrow:1, paddingTop:64 }}>
+            <Routes>
+              {/* ── Publiques ─────────────────────────────────────── */}
+              <Route path="/"         element={<><Hero /><ServicesSimple /></>} />
+              <Route path="/services" element={<ServicesDetail />} />
+              <Route path="/boutique" element={<Boutique produits={listeProduits} />} />
+              <Route path="/apropos" element={<Apropos />} />
+              <Route path="/contact" element={<Contact />} />
 
-            {/* 4. ON ENVOIE LES PRODUITS À LA BOUTIQUE */}
-            <Route path="/boutique" element={<Boutique produits={listeProduits} />} />
 
-            {/* 5. ON ENVOIE LES PRODUITS ET LA FONCTION DE MISE À JOUR À L'ADMIN */}
-            <Route 
-              path="/admin" 
-              element={<AdminDashboard produits={listeProduits} setProduits={setListeProduits} />} 
-            />
+              {/* ── Login admin ───────────────────────────────────── */}
+              <Route path="/admin/login" element={<AdminLogin />} />
 
-            <Route path="/contact" element={<div className="py-20 text-center font-bold">+221 78 463 41 65</div>} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+              {/* ── Admin protégé ─────────────────────────────────── */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard
+                      produits={listeProduits}
+                      setProduits={setListeProduits}
+                      onRefresh={loadProducts}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }

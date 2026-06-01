@@ -30,7 +30,7 @@ export default function Navbar() {
         <Link to="/" className={linkStyle}>Accueil</Link>
         <Link to="/services" className={linkStyle}>Services</Link>
         <Link to="/boutique" className={linkStyle}>Boutique</Link>
-        <Link to="/a-propos" className={linkStyle}>À propos</Link>
+        <Link to="/apropos" className={linkStyle}>À propos</Link>
         <Link 
           to="/contact" 
           className="btn btn-primary btn-sm bg-blue-600 border-none hover:bg-blue-700 ml-2 px-4 text-white"
