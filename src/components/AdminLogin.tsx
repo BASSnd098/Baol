@@ -1,4 +1,3 @@
-// src/components/AdminLogin.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -15,7 +14,7 @@ export default function AdminLogin() {
   const [loading,  setLoading]  = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!email || !password) { setError("Veuillez remplir tous les champs."); return; }
@@ -23,8 +22,8 @@ export default function AdminLogin() {
     try {
       await login(email, password);
       navigate("/admin");
-    } catch (err) {
-      setError(err.message || "Identifiants incorrects.");
+    } catch (err: any) {
+      setError(err?.message || "Identifiants incorrects.");
     } finally {
       setLoading(false);
     }

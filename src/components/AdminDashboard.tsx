@@ -1,19 +1,73 @@
-// src/components/AdminDashboard.tsx
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
+// @ts-ignore
 import { createProduct, updateProduct, deleteProduct } from "../api/api.js";
 import { useAuth } from "../context/AuthContext";
+
+// ─── INTERFACES DE TYPES ──────────────────────────────────────────────────────
+interface Produit {
+  id: string | number;
+  nom: string;
+  prix: number;
+  categorie: string;
+  description: string;
+  stock: boolean;
+  img: string;
+  images: string[];
+  specs: Record<string, string>;
+}
+
+interface KpiCardProps {
+  label: string;
+  value: string | number;
+  icon: string;
+  accent: string;
+  sub?: string;
+}
+
+interface StatistiquesProps {
+  produits: Produit[];
+}
+
+interface SpecsEditorProps {
+  specs: Record<string, string>;
+  onChange: (specs: Record<string, string>) => void;
+}
+
+interface ImagesEditorProps {
+  images: string[];
+  onChange: (images: string[]) => void;
+}
+
+interface ProduitFormProps {
+  editTarget: Produit | null;
+  onSave: (produit: Omit<Produit, "id"> & { id?: string | number }) => void;
+  onCancel: () => void;
+  saving: boolean;
+}
+
+interface AdminProductCardProps {
+  produit: Produit;
+  onEdit: (p: Produit) => void;
+  onDelete: (id: string | number) => void;
+  onToggleStock: (id: string | number) => void;
+}
+
+interface AdminDashboardProps {
+  produits: Produit[];
+  onRefresh: () => Promise<void> | void;
+}
 
 const NAVY = "#02101f";
 const BLUE = "#1a6cff";
 const CHART_COLORS = ["#1a6cff","#7C3AED","#0D9488","#DC2626","#D97706","#059669"];
 const ALL_CATEGORIES = ["Ordinateurs","IoT","Réseaux","Sécurité","Stockage","Logiciels"];
 const FILTER_CATEGORIES = ["Tous", ...ALL_CATEGORIES];
-const fmt = (n) => Number(n || 0).toLocaleString("fr-FR") + " FCFA";
+const fmt = (n: number | string) => Number(n || 0).toLocaleString("fr-FR") + " FCFA";
 
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
@@ -42,7 +96,7 @@ const GLOBAL_CSS = `
 `;
 
 // ─── KPI CARD ─────────────────────────────────────────────────────────────────
-function KpiCard({ label, value, icon, accent, sub }) {
+function KpiCard({ label, value, icon, accent, sub }: KpiCardProps) {
   return (
     <div className="card" style={{ padding:"18px 20px", display:"flex", alignItems:"center", gap:14 }}>
       <div style={{ width:46, height:46, borderRadius:12, background:accent+"18", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}>{icon}</div>
@@ -56,7 +110,7 @@ function KpiCard({ label, value, icon, accent, sub }) {
 }
 
 // ─── STATISTIQUES ─────────────────────────────────────────────────────────────
-function Statistiques({ produits }) {
+function Statistiques({ produits }: StatistiquesProps) {
   const jours = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
   const commandes = useMemo(() => jours.map(j => ({
     jour: j,
@@ -74,7 +128,7 @@ function Statistiques({ produits }) {
     ventes: Math.floor(Math.random() * 20) + 1,
   }));
   const parCategorie = useMemo(() => {
-    const map = {};
+    const map: Record<string, number> = {};
     produits.forEach(p => { map[p.categorie] = (map[p.categorie] || 0) + 1; });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [produits]);
@@ -168,16 +222,16 @@ function Statistiques({ produits }) {
 }
 
 // ─── SPECS EDITOR ─────────────────────────────────────────────────────────────
-function SpecsEditor({ specs, onChange }) {
+function SpecsEditor({ specs, onChange }: SpecsEditorProps) {
   const entries = Object.entries(specs || {});
   const addRow = () => onChange({ ...specs, "": "" });
-  const updateKey = (oldKey, newKey) => {
-    const u = {};
+  const updateKey = (oldKey: string, newKey: string) => {
+    const u: Record<string, string> = {};
     Object.entries(specs).forEach(([k, v]) => { u[k === oldKey ? newKey : k] = v; });
     onChange(u);
   };
-  const updateVal = (key, val) => onChange({ ...specs, [key]: val });
-  const removeRow = (key) => { const s = { ...specs }; delete s[key]; onChange(s); };
+  const updateVal = (key: string, val: string) => onChange({ ...specs, [key]: val });
+  const removeRow = (key: string) => { const s = { ...specs }; delete s[key]; onChange(s); };
   return (
     <div style={{ border:"1.5px solid var(--gray-200)", borderRadius:10, overflow:"hidden" }}>
       {entries.length === 0 && <p style={{ padding:"12px 14px", fontSize:12, color:"var(--gray-400)" }}>Aucune caractéristique.</p>}
@@ -196,12 +250,12 @@ function SpecsEditor({ specs, onChange }) {
 }
 
 // ─── IMAGES EDITOR ────────────────────────────────────────────────────────────
-function ImagesEditor({ images, onChange }) {
+function ImagesEditor({ images, onChange }: ImagesEditorProps) {
   const imgs = images || [];
   const addUrl    = () => onChange([...imgs, ""]);
-  const updateUrl = (i, v) => { const a = [...imgs]; a[i] = v; onChange(a); };
-  const removeUrl = (i) => onChange(imgs.filter((_, idx) => idx !== i));
-  const handleFile = (e, i) => {
+  const updateUrl = (i: number, v: string) => { const a = [...imgs]; a[i] = v; onChange(a); };
+  const removeUrl = (i: number) => onChange(imgs.filter((_, idx) => idx !== i));
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>, i: number) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith("image/")) return;
     const r = new FileReader();
@@ -226,7 +280,7 @@ function ImagesEditor({ images, onChange }) {
 }
 
 // ─── PRODUIT FORM ─────────────────────────────────────────────────────────────
-function ProduitForm({ editTarget, onSave, onCancel, saving }) {
+function ProduitForm({ editTarget, onSave, onCancel, saving }: ProduitFormProps) {
   const isEdit = !!editTarget;
   const [form, setForm] = useState({
     nom:         editTarget?.nom         || "",
@@ -238,9 +292,9 @@ function ProduitForm({ editTarget, onSave, onCancel, saving }) {
     images:      editTarget?.images      || [],
     specs:       editTarget?.specs       || {},
   });
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
-  const handleMainFile = (e) => {
+  const handleMainFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith("image/")) return;
     const r = new FileReader();
@@ -263,7 +317,7 @@ function ProduitForm({ editTarget, onSave, onCancel, saving }) {
     });
   };
 
-  const Sec = ({ title, children }) => (
+  const Sec = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div style={{ marginBottom:20 }}>
       <p style={{ fontSize:11, fontWeight:700, color:"var(--gray-400)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:10 }}>{title}</p>
       {children}
@@ -328,7 +382,7 @@ function ProduitForm({ editTarget, onSave, onCancel, saving }) {
 }
 
 // ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
-function AdminProductCard({ produit: p, onEdit, onDelete, onToggleStock }) {
+function AdminProductCard({ produit: p, onEdit, onDelete, onToggleStock }: AdminProductCardProps) {
   return (
     <div className="card" style={{ overflow:"hidden", display:"flex", flexDirection:"column", transition:"box-shadow 0.2s,transform 0.2s" }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow="0 8px 24px rgba(26,108,255,0.1)"; e.currentTarget.style.transform="translateY(-2px)"; }}
@@ -359,9 +413,9 @@ function AdminProductCard({ produit: p, onEdit, onDelete, onToggleStock }) {
 }
 
 // ─── DASHBOARD PRINCIPAL ──────────────────────────────────────────────────────
-export default function AdminDashboard({ produits = [], setProduits, onRefresh }) {
+export default function AdminDashboard({ produits = [], onRefresh }: AdminDashboardProps) {
   const [tab, setTab]               = useState("produits");
-  const [editTarget, setEditTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState<Produit | null>(null);
   const [showForm, setShowForm]     = useState(false);
   const [search, setSearch]         = useState("");
   const [filterCat, setFilterCat]   = useState("Tous");
@@ -371,11 +425,8 @@ export default function AdminDashboard({ produits = [], setProduits, onRefresh }
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
-
-
-  
   // ── Créer ou modifier ─────────────────────────────────────────────────────
-  const handleSave = async (produit) => {
+  const handleSave = async (produit: Omit<Produit, "id"> & { id?: string | number }) => {
     setSaving(true);
     setApiError("");
     try {
@@ -396,7 +447,7 @@ export default function AdminDashboard({ produits = [], setProduits, onRefresh }
       await onRefresh();
       setEditTarget(null);
       setShowForm(false);
-    } catch (err) {
+    } catch (err: any) {
       setApiError(err.message || "Erreur lors de la sauvegarde.");
     } finally {
       setSaving(false);
@@ -404,29 +455,29 @@ export default function AdminDashboard({ produits = [], setProduits, onRefresh }
   };
 
   // ── Supprimer ─────────────────────────────────────────────────────────────
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string | number) => {
     if (!window.confirm("Supprimer ce produit définitivement ?")) return;
     try {
       await deleteProduct(id);
       await onRefresh();
-    } catch (err) {
+    } catch (err: any) {
       setApiError(err.message || "Erreur suppression.");
     }
   };
 
   // ── Basculer stock ────────────────────────────────────────────────────────
-  const handleToggleStock = async (id) => {
+  const handleToggleStock = async (id: string | number) => {
     const p = produits.find(p => p.id === id);
     if (!p) return;
     try {
       await updateProduct(id, { stock: p.stock ? 0 : 1 });
       await onRefresh();
-    } catch (err) {
+    } catch (err: any) {
       setApiError(err.message || "Erreur stock.");
     }
   };
 
-  const handleEdit   = (p) => { setEditTarget(p); setShowForm(true); window.scrollTo({ top:0, behavior:"smooth" }); };
+  const handleEdit   = (p: Produit) => { setEditTarget(p); setShowForm(true); window.scrollTo({ top:0, behavior:"smooth" }); };
   const handleCancel = () => { setEditTarget(null); setShowForm(false); setApiError(""); };
 
   const filtered = useMemo(() => produits.filter(p => {
