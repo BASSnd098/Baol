@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 const WHATSAPP_NUMBER = "221784634165";
 const CART_KEY = "baol_cart_v3";
 
-const formatPrix = (p) => {
+const formatPrix = (p: number | string) => {
   const n = typeof p === "number" ? p : Number(p) || 0;
   return n.toLocaleString("fr-FR") + " FCFA";
 };
@@ -26,9 +26,9 @@ const PAYMENT_METHODS = [
 // ═══════════════════════════════════════════════════════════════════
 //   COMPOSANT PRINCIPAL — reçoit `produits` depuis App.tsx
 // ═══════════════════════════════════════════════════════════════════
-export default function BTStore({ produits = [] }) {
+export default function BTStore({ produits = [] }: { produits: any[] }) {
   // Panier persisté en localStorage
-  const [cart, setCart] = useState(() => {
+  const [cart, setCart] = useState<any[]>(() => {
     try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch { return []; }
   });
   useEffect(() => {
@@ -36,18 +36,18 @@ export default function BTStore({ produits = [] }) {
   }, [cart]);
 
   const [page, setPage] = useState("boutique");
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [cartOpen, setCartOpen] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
   const [checkoutForm, setCheckoutForm] = useState({ nom: "", email: "", telephone: "", adresse: "" });
   const [paymentMethod, setPaymentMethod] = useState("");
 
-  const showToast = (message, type = "success") => {
+  const showToast = (message: string, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product: any) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
@@ -56,15 +56,15 @@ export default function BTStore({ produits = [] }) {
     showToast(`${product.nom} ajouté au panier`);
   };
 
-  const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
+  const removeFromCart = (id: string | number) => setCart(prev => prev.filter(item => item.id !== id));
 
-  const updateQuantity = (id, delta) => {
+  const updateQuantity = (id: string | number, delta: number) => {
     setCart(prev =>
       prev.map(item => {
         if (item.id !== id) return item;
         const newQty = item.qty + delta;
         return newQty <= 0 ? null : { ...item, qty: newQty };
-      }).filter(Boolean)
+      }).filter((Boolean as any) as (value: any) => value is any)
     );
   };
 
@@ -193,7 +193,7 @@ export default function BTStore({ produits = [] }) {
 // ═══════════════════════════════════════════════════════════════════
 //   NAVBAR
 // ═══════════════════════════════════════════════════════════════════
-function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }) {
+function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }: { setPage: (p: string) => void; setSelectedProduct: (p: any) => void; setCartOpen: (o: boolean) => void; cartCount: number }) {
   return (
     <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(245,244,240,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #e5e7eb", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
       <button onClick={() => { setPage("boutique"); setSelectedProduct(null); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, fontWeight: 800, color: "#0f1623" }}>
@@ -212,7 +212,7 @@ function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }) {
 // ═══════════════════════════════════════════════════════════════════
 //   PRODUCT CARD
 // ═══════════════════════════════════════════════════════════════════
-function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProduct, setPage }) {
+function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProduct, setPage }: { product: any; cart: any[]; updateQuantity: (id: string | number, delta: number) => void; addToCart: (p: any) => void; setSelectedProduct: (p: any) => void; setPage: (p: string) => void }) {
   const [hovered, setHovered] = useState(false);
   const cartItem = cart.find(item => item.id === product.id);
 
@@ -269,8 +269,8 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
         {/* Bouton voir détails */}
         <button onClick={() => { setSelectedProduct(product); setPage("detail"); }}
           style={{ width: "100%", padding: "7px", background: "transparent", border: "1px solid #e5e7eb", borderRadius: 50, fontSize: 12, fontWeight: 500, color: "#6b7280", cursor: "pointer", transition: "all 0.15s" }}
-          onMouseEnter={e => { e.target.style.borderColor = "#1e40af"; e.target.style.color = "#1e40af"; }}
-          onMouseLeave={e => { e.target.style.borderColor = "#e5e7eb"; e.target.style.color = "#6b7280"; }}>
+          onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#1e40af"; (e.target as HTMLElement).style.color = "#1e40af"; }}
+          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#e5e7eb"; (e.target as HTMLElement).style.color = "#6b7280"; }}>
           Voir les détails →
         </button>
       </div>
@@ -281,7 +281,7 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
 // ═══════════════════════════════════════════════════════════════════
 //   BOUTIQUE PAGE
 // ═══════════════════════════════════════════════════════════════════
-function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedProduct, setPage }) {
+function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedProduct, setPage }: { produits: any[]; cart: any[]; updateQuantity: (id: string | number, delta: number) => void; addToCart: (p: any) => void; setSelectedProduct: (p: any) => void; setPage: (p: string) => void }) {
   const [categorie, setCategorie] = useState("Tous");
   const [search, setSearch] = useState("");
 
@@ -334,7 +334,7 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
 // ═══════════════════════════════════════════════════════════════════
 //   DETAIL PAGE
 // ═══════════════════════════════════════════════════════════════════
-function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct, addToCart, cart }) {
+function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct, addToCart, cart }: { selectedProduct: any; produits: any[]; setPage: (page: string) => void; setSelectedProduct: (p: any) => void; addToCart: (p: any) => void; cart: any[] }) {
   const [activeImg, setActiveImg] = useState(0);
   const images = (p.images && p.images.length > 0) ? p.images : [p.img].filter(Boolean);
   const cartItem = cart.find(item => item.id === p.id);
@@ -353,12 +353,12 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
           <div style={{ borderRadius: 14, overflow: "hidden", background: "#f3f4f6", height: 340, marginBottom: 12, cursor: "zoom-in" }}>
             <img src={images[activeImg] || "https://via.placeholder.com/600x400"} alt={p.nom}
               style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }}
-              onMouseEnter={e => e.target.style.transform = "scale(1.06)"}
-              onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+              onMouseEnter={e => (e.target as HTMLElement).style.transform = "scale(1.06)"}
+              onMouseLeave={e => (e.target as HTMLElement).style.transform = "scale(1)"} />
           </div>
           {images.length > 1 && (
             <div style={{ display: "flex", gap: 8 }}>
-              {images.map((img, i) => (
+              {images.map((img: string, i: number) => (
                 <div key={i} onClick={() => setActiveImg(i)}
                   style={{ width: 66, height: 58, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: `2px solid ${activeImg === i ? "#1e40af" : "transparent"}`, opacity: activeImg === i ? 1 : 0.55, transition: "all 0.15s" }}>
                   <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -384,7 +384,7 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
           {p.specs && Object.keys(p.specs).length > 0 && (
             <div style={{ background: "#f9fafb", borderRadius: 12, padding: "14px 16px" }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Caractéristiques</p>
-              {Object.entries(p.specs).map(([k, v]) => (
+              {Object.entries(p.specs).map(([k, v]: [string, any]) => (
                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #e5e7eb", fontSize: 13 }}>
                   <span style={{ color: "#6b7280", fontWeight: 500 }}>{k}</span>
                   <span style={{ color: "#0f1623", fontWeight: 600, textAlign: "right", maxWidth: "55%" }}>{v}</span>
@@ -426,14 +426,14 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
 // ═══════════════════════════════════════════════════════════════════
 //   CART DRAWER
 // ═══════════════════════════════════════════════════════════════════
-function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, removeFromCart, cartTotal, handleCheckout }) {
+function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, removeFromCart, cartTotal, handleCheckout }: { cartOpen: boolean; setCartOpen: (o: boolean) => void; cart: any[]; cartCount: number; updateQuantity: (id: string | number, delta: number) => void; removeFromCart: (id: string | number) => void; cartTotal: number; handleCheckout: () => void }) {
   return (
     <>
       {cartOpen && <div onClick={() => setCartOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 150 }} />}
       <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "100%", maxWidth: 420, background: "#fff", zIndex: 200, display: "flex", flexDirection: "column", boxShadow: "-8px 0 40px rgba(0,0,0,0.15)", transform: cartOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 0.3s ease" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0f1623", color: "#fff" }}>
           <span style={{ fontWeight: 700, fontSize: 16 }}>🛒 Panier ({cartCount})</span>
-          <button onClick={() => setCartOpen(false)} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: 30, height: 30, borderRadius: "50%", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <button onClick={() => setCartOpen(false)} style={{ background: "none", backgroundColor: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: 30, height: 30, borderRadius: "50%", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
@@ -481,8 +481,8 @@ function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, re
 // ═══════════════════════════════════════════════════════════════════
 //   CHECKOUT PAGE
 // ═══════════════════════════════════════════════════════════════════
-function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, setPaymentMethod, cart, cartTotal, submitOrder }) {
-  const set = (k, v) => setCheckoutForm(f => ({ ...f, [k]: v }));
+function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, setPaymentMethod, cart, cartTotal, submitOrder }: { setPage: (p: string) => void; checkoutForm: any; setCheckoutForm: React.Dispatch<React.SetStateAction<any>>; paymentMethod: string; setPaymentMethod: (m: string) => void; cart: any[]; cartTotal: number; submitOrder: () => void }) {
+  const set = (k: string, v: any) => setCheckoutForm((f: any) => ({ ...f, [k]: v }));
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
       <button onClick={() => setPage("boutique")} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", marginBottom: 28, fontWeight: 600, fontSize: 14 }}>← Retour</button>
@@ -495,7 +495,7 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
               { key: "nom", label: "Nom complet *", type: "text" },
               { key: "email", label: "Email", type: "email" },
               { key: "telephone", label: "Téléphone *", type: "tel" },
-            ].map(f => (
+            ].map((f: any) => (
               <input key={f.key} type={f.type} placeholder={f.label} value={checkoutForm[f.key]}
                 onChange={e => set(f.key, e.target.value)}
                 style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", marginBottom: 12, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
@@ -540,17 +540,12 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
 // ═══════════════════════════════════════════════════════════════════
 //   SUCCESS PAGE
 // ═══════════════════════════════════════════════════════════════════
-function SuccessPage({ setPage }) {
+function SuccessPage({ setPage }: { setPage: (p: string) => void }) {
   return (
     <div style={{ maxWidth: 560, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
       <div style={{ width: 80, height: 80, background: "#d1fae5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 24px" }}>✓</div>
       <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 12, color: "#0f1623" }}>Commande confirmée !</h1>
-      <p style={{ color: "#6b7280", marginBottom: 32, lineHeight: 1.6, fontSize: 14 }}>
-        Les détails ont été partagés via WhatsApp. L'équipe Baol Technologies traitera votre commande sous peu.
-      </p>
-      <button onClick={() => setPage("boutique")} style={{ padding: "12px 32px", background: "#0f1623", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-        Continuer mes achats
-      </button>
+      <p style={{ color: "#6b7280", marginBottom: 32, lineHeight: 1.5 }}>Merci pour votre commande.</p>
     </div>
   );
 }
