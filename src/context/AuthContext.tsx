@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
+
+// @ts-ignore
 import { loginAdmin } from "../api/api.js";
 
 // Définition de l'interface pour le contexte d'authentification

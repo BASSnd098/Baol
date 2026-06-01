@@ -1,4 +1,3 @@
-// src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AuthProvider }   from "./context/AuthContext";
@@ -13,10 +12,25 @@ import ServicesSimple     from "./components/Services";
 import ServicesDetail     from "./components/ServicesAndValues";
 import Apropos            from "./components/Apropos";
 import Contact            from "./components/Contact.tsx";
+
+// @ts-ignore
 import { getProducts }    from "./api/api.js";
 
-// Convertir format API → format frontend
-const formatProduct = (p) => ({
+// Interface pour correspondre au typage attendu par le Dashboard et la Boutique
+interface Produit {
+  id: string | number;
+  nom: string;
+  prix: number;
+  categorie: string;
+  description: string;
+  stock: boolean;
+  img: string;
+  images: string[];
+  specs: Record<string, string>;
+}
+
+// Convertir format API → format frontend avec typage explicite de l'argument
+const formatProduct = (p: any): Produit => ({
   id:          p._id,
   nom:         p.name,
   prix:        p.price,
@@ -29,7 +43,7 @@ const formatProduct = (p) => ({
 });
 
 export default function App() {
-  const [listeProduits, setListeProduits] = useState([]);
+  const [listeProduits, setListeProduits] = useState<Produit[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadProducts = async () => {
@@ -73,7 +87,6 @@ export default function App() {
               <Route path="/apropos" element={<Apropos />} />
               <Route path="/contact" element={<Contact />} />
 
-
               {/* ── Login admin ───────────────────────────────────── */}
               <Route path="/admin/login" element={<AdminLogin />} />
 
@@ -84,7 +97,6 @@ export default function App() {
                   <ProtectedRoute>
                     <AdminDashboard
                       produits={listeProduits}
-                      setProduits={setListeProduits}
                       onRefresh={loadProducts}
                     />
                   </ProtectedRoute>

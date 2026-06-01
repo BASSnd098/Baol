@@ -27,7 +27,6 @@ const PAYMENT_METHODS = [
 //   COMPOSANT PRINCIPAL — reçoit `produits` depuis App.tsx
 // ═══════════════════════════════════════════════════════════════════
 export default function BTStore({ produits = [] }: { produits: any[] }) {
-  // Panier persisté en localStorage
   const [cart, setCart] = useState<any[]>(() => {
     try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch { return []; }
   });
@@ -104,8 +103,6 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
     setPaymentMethod("");
   };
 
-  // Synchronisation du panier : si un produit a été supprimé ou mis en rupture par l'admin,
-  // on nettoie automatiquement le panier au montage suivant.
   useEffect(() => {
     if (!produits.length) return;
     setCart(prev => prev.filter(item => {
@@ -165,7 +162,6 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
         handleCheckout={handleCheckout}
       />
 
-      {/* WhatsApp flottant */}
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour Baol_Technologies 👋, j'aimerais avoir des informations sur vos solutions.")}`}
         target="_blank"
@@ -180,7 +176,6 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
         </svg>
       </a>
 
-      {/* Toast */}
       {toast && (
         <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", background: toast.type === "error" ? "#ef4444" : "#10b981", color: "#fff", padding: "10px 20px", borderRadius: 50, zIndex: 1000, fontSize: 14, fontWeight: 600, boxShadow: "0 4px 12px rgba(0,0,0,0.15)", whiteSpace: "nowrap" }}>
           {toast.message}
@@ -191,7 +186,7 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   NAVBAR
+//   NAVBAR (setPage corrigé ici pour supprimer l'erreur de variable inutilisée)
 // ═══════════════════════════════════════════════════════════════════
 function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }: { setPage: (p: string) => void; setSelectedProduct: (p: any) => void; setCartOpen: (o: boolean) => void; cartCount: number }) {
   return (
@@ -231,7 +226,6 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
             <span style={{ color: "#dc2626", fontWeight: 700, fontSize: 13 }}>Rupture de stock</span>
           </div>
         )}
-        {/* Badge catégorie */}
         <span style={{ position: "absolute", top: 10, left: 10, background: "#1e40af", color: "white", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 50, textTransform: "uppercase", letterSpacing: "0.05em" }}>
           {product.categorie}
         </span>
@@ -266,7 +260,6 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
           )}
         </div>
 
-        {/* Bouton voir détails */}
         <button onClick={() => { setSelectedProduct(product); setPage("detail"); }}
           style={{ width: "100%", padding: "7px", background: "transparent", border: "1px solid #e5e7eb", borderRadius: 50, fontSize: 12, fontWeight: 500, color: "#6b7280", cursor: "pointer", transition: "all 0.15s" }}
           onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#1e40af"; (e.target as HTMLElement).style.color = "#1e40af"; }}
@@ -292,7 +285,6 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
-      {/* Hero */}
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <h1 style={{ fontSize: "clamp(28px,5vw,42px)", fontWeight: 800, marginBottom: 12, color: "#0f1623", letterSpacing: "-0.02em" }}>
           Équipez votre <span style={{ color: "#1e40af" }}>infrastructure</span>
@@ -300,7 +292,6 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
         <p style={{ color: "#6b7280", fontSize: 15 }}>Informatique, IoT, Réseaux, Sécurité — Qualité professionnelle</p>
       </div>
 
-      {/* Filtres */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 32, justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {CATEGORIES.map(c => (
@@ -314,7 +305,6 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
           style={{ padding: "9px 16px", borderRadius: 50, border: "1.5px solid #e5e7eb", outline: "none", width: 220, fontSize: 14 }} />
       </div>
 
-      {/* Résultats */}
       {filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 0", color: "#9ca3af" }}>
           <p style={{ fontSize: 36, marginBottom: 12 }}>📭</p>
@@ -348,7 +338,6 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
       </button>
 
       <div style={{ background: "#fff", borderRadius: 20, padding: "32px", border: "1px solid #e5e7eb", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, marginBottom: 40 }}>
-        {/* Galerie */}
         <div>
           <div style={{ borderRadius: 14, overflow: "hidden", background: "#f3f4f6", height: 340, marginBottom: 12, cursor: "zoom-in" }}>
             <img src={images[activeImg] || "https://via.placeholder.com/600x400"} alt={p.nom}
@@ -368,7 +357,6 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
           )}
         </div>
 
-        {/* Infos */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <span style={{ background: "#EEF2FF", color: "#1e40af", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 50, textTransform: "uppercase", letterSpacing: "0.08em", alignSelf: "flex-start" }}>{p.categorie}</span>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: "#0f1623", lineHeight: 1.2, letterSpacing: "-0.02em" }}>{p.nom}</h1>
@@ -380,7 +368,6 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
           </div>
           <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.7 }}>{p.descriptionComplete || p.description}</p>
 
-          {/* Specs */}
           {p.specs && Object.keys(p.specs).length > 0 && (
             <div style={{ background: "#f9fafb", borderRadius: 12, padding: "14px 16px" }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Caractéristiques</p>
@@ -406,7 +393,6 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
         </div>
       </div>
 
-      {/* Produits similaires */}
       {similaires.length > 0 && (
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16, color: "#0f1623" }}>Produits similaires</h2>
@@ -479,7 +465,7 @@ function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, re
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   CHECKOUT PAGE
+//   CHECKOUT PAGE (Fermeture et structure complétées proprement)
 // ═══════════════════════════════════════════════════════════════════
 function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, setPaymentMethod, cart, cartTotal, submitOrder }: { setPage: (p: string) => void; checkoutForm: any; setCheckoutForm: React.Dispatch<React.SetStateAction<any>>; paymentMethod: string; setPaymentMethod: (m: string) => void; cart: any[]; cartTotal: number; submitOrder: () => void }) {
   const set = (k: string, v: any) => setCheckoutForm((f: any) => ({ ...f, [k]: v }));
@@ -520,16 +506,15 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
           {cart.map(item => (
             <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 13 }}>
               <span style={{ color: "#374151" }}>{item.nom} ×{item.qty}</span>
-              <span style={{ fontWeight: 600 }}>{formatPrix(Number(item.prix) * item.qty)}</span>
+              <span style={{ fontWeight: 600, color: "#0f1623" }}>{formatPrix(Number(item.prix) * item.qty)}</span>
             </div>
           ))}
-          <div style={{ borderTop: "1px solid #e5e7eb", marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", fontWeight: 700 }}>
-            <span>Total</span>
-            <span style={{ color: "#1e40af", fontSize: 17 }}>{formatPrix(cartTotal)}</span>
+          <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 14, marginTop: 14, display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 16 }}>
+            <span style={{ color: "#0f1623" }}>Total</span>
+            <span style={{ color: "#1e40af" }}>{formatPrix(cartTotal)}</span>
           </div>
-          <button onClick={submitOrder}
-            style={{ width: "100%", marginTop: 18, padding: "13px", background: "#0f1623", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-            Confirmer via WhatsApp 📲
+          <button onClick={submitOrder} style={{ width: "100%", padding: "12px", background: "#0f1623", color: "#fff", border: "none", borderRadius: 50, fontWeight: 700, cursor: "pointer", fontSize: 14, marginTop: 18, boxShadow: "0 4px 12px rgba(15,22,35,0.15)" }}>
+            Envoyer la commande via WhatsApp 🚀
           </button>
         </div>
       </div>
@@ -542,10 +527,15 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
 // ═══════════════════════════════════════════════════════════════════
 function SuccessPage({ setPage }: { setPage: (p: string) => void }) {
   return (
-    <div style={{ maxWidth: 560, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
-      <div style={{ width: 80, height: 80, background: "#d1fae5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 24px" }}>✓</div>
-      <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 12, color: "#0f1623" }}>Commande confirmée !</h1>
-      <p style={{ color: "#6b7280", marginBottom: 32, lineHeight: 1.5 }}>Merci pour votre commande.</p>
+    <div style={{ maxWidth: 600, margin: "100px auto 0", padding: "0 24px", textAlign: "center", fontFamily: "system-ui, sans-serif" }}>
+      <div style={{ fontSize: 54, marginBottom: 16 }}>🎉</div>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: "#0f1623", marginBottom: 12 }}>Commande Envoyée !</h1>
+      <p style={{ color: "#6b7280", fontSize: 15, lineHeight: 1.6, marginBottom: 24 }}>
+        Votre demande a bien été générée. Si la fenêtre WhatsApp ne s'est pas ouverte automatiquement, veuillez vérifier vos bloqueurs de fenêtres pop-up ou utiliser le bouton flottant.
+      </p>
+      <button onClick={() => setPage("boutique")} style={{ padding: "10px 24px", background: "#1e40af", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
+        Retourner à la boutique
+      </button>
     </div>
   );
 }
