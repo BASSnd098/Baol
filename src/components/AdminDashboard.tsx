@@ -430,15 +430,19 @@ export default function AdminDashboard({ produits = [], onRefresh }: AdminDashbo
     setSaving(true);
     setApiError("");
     try {
+      // Configuration de l'objet de données parfaitement calqué sur les exigences Mongoose du backend
       const payload = {
         name:        produit.nom,
         price:       produit.prix,
         category:    produit.categorie,
-        description: produit.description,
-        stock:       produit.stock ? 1 : 0,
+        description: produit.description || "Aucune description fournie", // Validation requise résolue
+        stock:       produit.stock ? 10 : 0,                             // Typage Number configuré (> 0 pour affichage boutique)
+        img:         produit.img || "",
         images:      produit.images || [],
+        specs:       produit.specs || {},
         featured:    false,
       };
+
       if (editTarget) {
         await updateProduct(produit.id, payload);
       } else {
@@ -470,7 +474,8 @@ export default function AdminDashboard({ produits = [], onRefresh }: AdminDashbo
     const p = produits.find(p => p.id === id);
     if (!p) return;
     try {
-      await updateProduct(id, { stock: p.stock ? 0 : 1 });
+      // p.stock est un booléen. S'il est actuellement en stock (true), on le passe à 0, sinon à 10.
+      await updateProduct(id, { stock: p.stock ? 0 : 10 });
       await onRefresh();
     } catch (err: any) {
       setApiError(err.message || "Erreur stock.");
