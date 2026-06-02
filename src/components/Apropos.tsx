@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import directeur from "../assets/mamoune.jpeg";
+import signatur from "../assets/signe.jpeg";
 
 const NAVY = "#02101f";
 const BLUE = "#1a6cff";
@@ -25,7 +27,7 @@ export default function AboutPage() {
     email: "",
     tel: "",
     entreprise: "",
-    service: "Infrastructure Réseau",
+    service: "Infrastructure", 
     detail: "",
   });
 
@@ -57,7 +59,7 @@ export default function AboutPage() {
           email: "",
           tel: "",
           entreprise: "",
-          service: "Infrastructure Réseau",
+          service: "Infrastructure",
           detail: "",
         });
         setTimeout(() => {
@@ -333,6 +335,262 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* HISTOIRE SECTION - DESIGN CHRONOLOGIQUE PREMIUM */}
+      <section style={{ maxWidth: "1200px", margin: "100px auto", padding: "0 24px" }}>
+        <div style={{ 
+          background: "#fff", 
+          borderRadius: "32px", 
+          padding: "60px 40px", 
+          boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+          border: "1px solid #f1f5f9"
+        }}>
+          
+          {/* En-tête de la section */}
+          <div style={{ textAlign: "center", marginBottom: "60px" }}>
+            <span style={{ 
+              color: BLUE, 
+              fontSize: "13px", 
+              fontWeight: 700, 
+              textTransform: "uppercase", 
+              letterSpacing: "2px",
+              display: "block",
+              marginBottom: "12px"
+            }}>
+              Parcours & Évolution
+            </span>
+            <h2 style={{ ...styles.sectionTitle, fontSize: "36px", marginBottom: "16px" }}>Notre Histoire</h2>
+            <p style={{ color: "#64748b", fontSize: "16px", maxWidth: "600px", margin: "0 auto" }}>
+              Une aventure bâtie sur l'expérience terrain et la passion des technologies.
+            </p>
+          </div>
+
+          {/* Conteneur de la Frise Chronologique */}
+          <div style={{ position: "relative", maxWidth: "850px", margin: "0 auto", padding: "20px 0" }}>
+            
+            {/* Ligne verticale centrale en arrière-plan */}
+            <div style={{ 
+              position: "absolute", 
+              left: "31px", 
+              top: "40px", 
+              bottom: "40px", 
+              width: "2px", 
+              background: `linear-gradient(to bottom, ${BLUE} 0%, #e2e8f0 100%)`,
+              opacity: 0.6
+            }} />
+
+            {/* ÉTAPE 1: Les Débuts */}
+            <div style={{ display: "flex", gap: "32px", marginBottom: "40px", position: "relative" }}>
+              {/* Point de la frise */}
+              <div style={{ 
+                width: "64px", height: "64px", borderRadius: "50%", background: "#e0f2fe", 
+                display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
+                boxShadow: "0 0 0 6px #fff", fontSize: "15px", fontWeight: 800, color: BLUE 
+              }}>2022</div>
+              {/* Contenu */}
+              <div style={{ flex: 1, paddingTop: "12px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "8px" }}>Les Prestations Indépendantes</h3>
+                <p style={{ color: "#475569", lineHeight: 1.8, margin: 0, fontSize: "15px" }}>
+                  L'aventure qui a conduit à la création de Baol Technologies a débuté en 2022 à travers des prestations indépendantes de maintenance électronique, informatique et réseau réalisées auprès de particuliers, d'entreprises et d'organisations.
+                </p>
+              </div>
+            </div>
+
+            {/* ÉTAPE 2: La Croissance */}
+            <div style={{ display: "flex", gap: "32px", marginBottom: "40px", position: "relative" }}>
+              {/* Point de la frise */}
+              <div style={{ 
+                width: "64px", height: "64px", borderRadius: "50%", background: "#e0f2fe", 
+                display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
+                boxShadow: "0 0 0 6px #fff", fontSize: "18px", fontWeight: 800, color: BLUE 
+              }}>🚀</div>
+              {/* Contenu */}
+              <div style={{ flex: 1, paddingTop: "12px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "8px" }}>Diversification &amp; Expansion</h3>
+                <p style={{ color: "#475569", lineHeight: 1.8, margin: 0, fontSize: "15px" }}>
+                  Au fil des missions, les besoins des clients se sont diversifiés et les projets sont devenus plus ambitieux. Pour répondre efficacement à cette demande croissante, plusieurs techniciens et spécialistes ont été mobilisés afin d'apporter des solutions toujours plus complètes et performantes.
+                </p>
+              </div>
+            </div>
+
+            {/* ÉTAPE 3: Structuration */}
+            <div style={{ display: "flex", gap: "32px", marginBottom: "40px", position: "relative" }}>
+              {/* Point de la frise */}
+              <div style={{ 
+                width: "64px", height: "64px", borderRadius: "50%", background: "#e0f2fe", 
+                display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
+                boxShadow: "0 0 0 6px #fff", fontSize: "18px", fontWeight: 800, color: BLUE 
+              }}>🏢</div>
+              {/* Contenu */}
+              <div style={{ flex: 1, paddingTop: "12px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "8px" }}>Naissance d'un Écosystème Global</h3>
+                <p style={{ color: "#475569", lineHeight: 1.8, margin: 0, fontSize: "15px" }}>
+                  Cette dynamique a progressivement donné naissance à une structure organisée, capable d'accompagner les entreprises dans les domaines des infrastructures réseau, de la cybersécurité, du développement d'applications, de l'intelligence artificielle, des systèmes connectés et de la maintenance technique spécialisée.
+                </p>
+              </div>
+            </div>
+
+            {/* ÉTAPE 4: Aujourd'hui */}
+            <div style={{ display: "flex", gap: "32px", position: "relative" }}>
+              {/* Point de la frise */}
+              <div style={{ 
+                width: "64px", height: "64px", borderRadius: "50%", background: `linear-gradient(135deg, ${BLUE} 0%, ${NAVY} 100%)`, 
+                display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
+                boxShadow: "0 0 0 6px #fff", fontSize: "14px", fontWeight: 800, color: "#fff" 
+              }}>BAOL</div>
+              {/* Contenu */}
+              <div style={{ flex: 1, paddingTop: "12px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, color: BLUE, marginBottom: "8px" }}>Une Équipe Consolidée</h3>
+                <p style={{ color: "#475569", lineHeight: 1.8, margin: 0, fontSize: "15px", fontWeight: 500 }}>
+                  Aujourd'hui, Baol Technologies s'appuie sur une équipe composée d'une dizaine de techniciens, ingénieurs et consultants engagés autour d'un même objectif : fournir des solutions fiables, innovantes et adaptées aux réalités du marché africain.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+      {/* MOT DU DIRECTEUR */}
+      <section style={{ background: "#f8fafc", padding: "100px 24px", position: "relative" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          
+          {/* Grille Principale Asymétrique */}
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", 
+            gap: "64px", 
+            alignItems: "start" 
+          }}>
+            
+            {/* Côté Gauche - La Carte de Profil Flottante */}
+            <div style={{
+              background: `linear-gradient(135deg, ${NAVY} 0%, #0a2a4a 100%)`,
+              borderRadius: "24px",
+              padding: "48px 32px",
+              textAlign: "center",
+              color: "#fff",
+              boxShadow: "0 20px 40px rgba(2, 16, 31, 0.15)",
+              position: "sticky",
+              top: "40px", // Reste visible lors du défilement sur grand écran
+            }}>
+              <div style={{ position: "relative", display: "inline-block", marginBottom: "24px" }}>
+                <img
+                  src={directeur}
+                  alt="Modou Mamoune Ndoye"
+                  style={{
+                    width: "220px",
+                    height: "250px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    objectPosition: "top center", // FORCE LE CADRAGE SUR LA TÊTE
+                    border: `4px solid ${BLUE}`,
+                    boxShadow: "0 8px 16px rgba(0,0,0,0.2)"
+                  }}
+                />
+                {/* Petit badge décoratif d'authenticité */}
+                <span style={{
+                  position: "absolute",
+                  bottom: "8px",
+                  right: "8px",
+                  background: BLUE,
+                  color: "#fff",
+                  borderRadius: "50%",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "14px",
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.2)"
+                }}>🛡️</span>
+              </div>
+
+              <h3 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "6px", letterSpacing: "-0.5px" }}>
+                Modou Mamoune Ndoye
+              </h3>
+              <p style={{ color: "#94a3b8", fontSize: "14px", fontWeight: 500, marginBottom: "28px", textTransform: "uppercase", letterSpacing: "1px" }}>
+                Fondateur & Directeur Général
+              </p>
+              
+              <div style={{ width: "40px", height: "3px", background: BLUE, margin: "0 auto" }} />
+            </div>
+
+            {/* Côté Droit - Le Message Éditorial */}
+            <div style={{ paddingRight: "20px" }}>
+              {/* Surlignage de section */}
+              <span style={{ 
+                color: BLUE, 
+                fontSize: "13px", 
+                fontWeight: 700, 
+                textTransform: "uppercase", 
+                letterSpacing: "2px",
+                display: "block",
+                marginBottom: "12px"
+              }}>
+                Édito de la direction
+              </span>
+              
+              <h2 style={{ ...styles.sectionTitle, fontSize: "40px", marginBottom: "32px", letterSpacing: "-1px" }}>
+                Mot du Directeur
+              </h2>
+
+              {/* Texte principal avec un style de lecture haut de gamme */}
+              <div style={{ fontSize: "17px", color: "#334155", lineHeight: "2" }}>
+                <p style={{ fontWeight: 600, color: NAVY, fontSize: "19px", marginBottom: "24px" }}>
+                  Chers visiteurs, chers partenaires,
+                </p>
+                
+                <p style={{ marginBottom: "24px", fontStyle: "italic", color: "#475569" }}>
+                  Bienvenue chez Baol Technologies.
+                </p>
+                
+                <p style={{ marginBottom: "24px" }}>
+                  Notre ambition est simple : mettre la technologie au service de la performance, de la sécurité et de la croissance des organisations. Dans un monde où la transformation numérique est devenue un levier stratégique, nous avons choisi de bâtir une entreprise fondée sur l'excellence technique, la proximité avec nos clients et la recherche permanente de solutions innovantes.
+                </p>
+                
+                <p style={{ marginBottom: "24px" }}>
+                  Depuis nos premières interventions techniques jusqu'à la création de Baol Technologies, notre priorité est restée la même : fournir des services fiables, transparents et adaptés aux besoins réels de nos partenaires.
+                </p>
+                
+                <p style={{ marginBottom: "40px" }}>
+                  Aujourd'hui, avec une équipe de techniciens, d'ingénieurs et de consultants passionnés, nous accompagnons les entreprises, établissements et organisations dans leurs projets technologiques les plus ambitieux.
+                </p>
+              </div>
+
+              {/* Bloc de Signature au Design Épuré */}
+              <div style={{ 
+                borderTop: "1px solid #e2e8f0", 
+                paddingTop: "32px", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "24px"
+              }}>
+                <div>
+                  <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "4px" }}>Haute considération,</p>
+                  <strong style={{ color: NAVY, fontSize: "18px", fontWeight: 700 }}>Modou Mamoune Ndoye</strong>
+                  <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Directeur Général, Baol Technologies</p>
+                </div>
+                
+                <img
+                  src={signatur}
+                  alt="Signature officielle"
+                  style={{
+                    height: "60px",
+                    objectFit: "contain",
+                    opacity: 0.9,
+                    filter: "multiply(1.1)" // Améliore le rendu si le fond de l'image est blanc
+                  }}
+                />
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* VALUES SECTION */}
       <section style={{ background: "#f1f5f9", padding: "80px 24px" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -352,9 +610,7 @@ export default function AboutPage() {
                 e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.08)";
               }}
             >
-              <div style={{ width: "56px", height: "56px", background: "#e0f2fe", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", marginBottom: "20px" }}>
-                🛠️
-              </div>
+              <div style={{ width: "56px", height: "56px", background: "#e0f2fe", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", marginBottom: "20px" }}>🛠️</div>
               <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "12px" }}>Rigueur &amp; Expertise</h3>
               <p style={{ color: "#64748b", lineHeight: 1.6, fontSize: "14px" }}>
                 Issus des métiers techniques de l'électronique et des télécommunications, nous maîtrisons les couches matérielles et logicielles.
@@ -371,9 +627,7 @@ export default function AboutPage() {
                 e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.08)";
               }}
             >
-              <div style={{ width: "56px", height: "56px", background: "#e0f2fe", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", marginBottom: "20px" }}>
-                🛡️
-              </div>
+              <div style={{ width: "56px", height: "56px", background: "#e0f2fe", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", marginBottom: "20px" }}>🛡️</div>
               <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "12px" }}>Sécurité Native</h3>
               <p style={{ color: "#64748b", lineHeight: 1.6, fontSize: "14px" }}>
                 Nous intégrons les meilleures pratiques de la cybersécurité dès la sélection de vos équipements.
@@ -390,9 +644,7 @@ export default function AboutPage() {
                 e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.08)";
               }}
             >
-              <div style={{ width: "56px", height: "56px", background: "#e0f2fe", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", marginBottom: "20px" }}>
-                🚀
-              </div>
+              <div style={{ width: "56px", height: "56px", background: "#e0f2fe", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", marginBottom: "20px" }}>🚀</div>
               <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "12px" }}>Innovation Accessible</h3>
               <p style={{ color: "#64748b", lineHeight: 1.6, fontSize: "14px" }}>
                 Rendre l'IoT, l'automatisme et les réseaux industriels accessibles aux acteurs économiques locaux.
@@ -409,8 +661,7 @@ export default function AboutPage() {
             Un projet d'envergure en vue ?
           </h2>
           <p style={{ color: "#94a3b8", maxWidth: "600px", margin: "0 auto 32px", lineHeight: 1.6 }}>
-            Qu'il s'agisse de déployer un parc informatique, de sécuriser un réseau complexe ou de concevoir 
-            une architecture IoT sur mesure, notre équipe technique est prête.
+            Qu'il s'agisse de déployer un parc informatique, de sécuriser un réseau complexe ou de concevoir une architecture IoT sur mesure, notre équipe technique est prête.
           </p>
           <button 
             onClick={() => { setIsModalOpen(true); setSubmitStatus("idle"); }}

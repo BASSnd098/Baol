@@ -16,6 +16,27 @@ interface ServiceDetail {
 
 // 2. Définition du dictionnaire de données avec ses clés strictes
 const servicesData: Record<string, ServiceDetail> = {
+developpement: {
+    label: "Développement",
+    icon: "ti-code",
+    title: "Développement Web & Applications",
+    desc: "Conception et développement de solutions digitales modernes, performantes et sécurisées adaptées aux besoins des entreprises.",
+    offres: [
+      "Applications web professionnelles et évolutives",
+      "Plateformes e-commerce et systèmes métiers",
+      "Solutions de gestion d’entreprise (ERP / CRM)",
+      "Applications mobiles multiplateformes",
+    ],
+    tech: [
+      "Architectures modernes",
+      "Interfaces utilisateur avancées",
+      "API sécurisées",
+      "Design responsive",
+    ],
+    color: "from-blue-600 to-blue-800",
+    accent: "#2563EB",
+  },
+
   maintenance: {
     label: "Maintenance",
     icon: "ti-tool",
@@ -57,26 +78,6 @@ const servicesData: Record<string, ServiceDetail> = {
   color: "from-red-600 to-rose-800",
   accent: "#DC2626",
 },
-  developpement: {
-    label: "Développement",
-    icon: "ti-code",
-    title: "Développement Web & Applications",
-    desc: "Conception et développement de solutions digitales modernes, performantes et sécurisées adaptées aux besoins des entreprises.",
-    offres: [
-      "Applications web professionnelles et évolutives",
-      "Plateformes e-commerce et systèmes métiers",
-      "Solutions de gestion d’entreprise (ERP / CRM)",
-      "Applications mobiles multiplateformes",
-    ],
-    tech: [
-      "Architectures modernes",
-      "Interfaces utilisateur avancées",
-      "API sécurisées",
-      "Design responsive",
-    ],
-    color: "from-blue-600 to-blue-800",
-    accent: "#2563EB",
-  },
 
   ia: {
     label: "Intelligence Artificielle",
