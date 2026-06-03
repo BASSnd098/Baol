@@ -20,15 +20,14 @@ export default function AboutPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
-  
-  // Détection de la taille de l'écran pour le responsive en style inline
   const [isMobile, setIsMobile] = useState(false);
 
+  // Détection de la taille de l'écran pour le responsive
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-    handleResize(); // Appel initial
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -92,7 +91,7 @@ export default function AboutPage() {
     container: {
       minHeight: "100vh",
       background: "#f8fafc",
-      overflowX: "hidden" as const, // Évite les bugs de défilement horizontal sur mobile
+      overflowX: "hidden" as const,
     },
     hero: {
       background: `linear-gradient(135deg, ${NAVY} 0%, #0a2a4a 50%, ${NAVY} 100%)`,
@@ -122,7 +121,7 @@ export default function AboutPage() {
       marginBottom: "20px",
     },
     title: {
-      fontSize: "clamp(26px, 5vw, 56px)", // Légèrement réduit le minimum pour mobile
+      fontSize: "clamp(24px, 5vw, 56px)",
       fontWeight: 800,
       color: "#fff",
       marginBottom: "20px",
@@ -141,7 +140,6 @@ export default function AboutPage() {
       padding: "28px 20px",
       textAlign: "center" as const,
       boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-      transition: "all 0.3s ease",
     },
     statNumber: {
       fontSize: "42px",
@@ -172,7 +170,6 @@ export default function AboutPage() {
       borderRadius: "16px",
       padding: "24px",
       border: "1px solid #e2e8f0",
-      transition: "all 0.3s ease",
     },
     ctaSection: {
       background: `linear-gradient(135deg, ${NAVY} 0%, #0a2a4a 100%)`,
@@ -202,7 +199,7 @@ export default function AboutPage() {
       maxWidth: "600px",
       width: "100%",
       maxHeight: "90vh",
-      overflow: "auto",
+      overflowY: "auto" as const,
       boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
     },
     modalHeader: {
@@ -222,6 +219,7 @@ export default function AboutPage() {
       border: "1.5px solid #e2e8f0",
       fontSize: "14px",
       outline: "none",
+      boxSizing: "border-box" as const,
     },
     textarea: {
       width: "100%",
@@ -232,6 +230,7 @@ export default function AboutPage() {
       fontFamily: "inherit",
       resize: "vertical" as const,
       outline: "none",
+      boxSizing: "border-box" as const,
     },
     select: {
       width: "100%",
@@ -241,6 +240,7 @@ export default function AboutPage() {
       fontSize: "14px",
       background: "#fff",
       outline: "none",
+      boxSizing: "border-box" as const,
     },
     button: {
       background: BLUE,
@@ -251,15 +251,15 @@ export default function AboutPage() {
       fontSize: "14px",
       fontWeight: 600,
       cursor: "pointer",
-      transition: "all 0.2s",
+      width: isMobile ? "100%" : "auto",
     },
     timelineItem: {
       display: "flex",
       flexDirection: isMobile ? ("column" as const) : ("row" as const),
-      gap: isMobile ? "12px" : "32px",
+      gap: isMobile ? "16px" : "32px",
       marginBottom: "40px",
       position: "relative" as const,
-      alignItems: isMobile ? "flex-start" : "transparent",
+      alignItems: isMobile ? "flex-start" : "center",
     }
   };
 
@@ -282,7 +282,7 @@ export default function AboutPage() {
       </section>
 
       {/* STATS SECTION */}
-      <section style={{ maxWidth: "1200px", margin: isMobile ? "20px auto 0" : "-40px auto 0", padding: "0 24px", position: "relative", zIndex: 10 }}>
+      <section style={{ maxWidth: "1200px", margin: isMobile ? "30px auto 0" : "-40px auto 0", padding: "0 24px", position: "relative", zIndex: 10 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "24px" }}>
           <div style={styles.statCard}>
             <div style={styles.statNumber}>100%</div>
@@ -303,7 +303,7 @@ export default function AboutPage() {
       </section>
 
       {/* MISSION SECTION */}
-      <section style={{ maxWidth: "1200px", margin: isMobile ? "50px auto" : "80px auto", padding: "0 24px" }}>
+      <section style={{ maxWidth: "1200px", margin: isMobile ? "60px auto" : "80px auto", padding: "0 24px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "32px", alignItems: "center" }}>
           <div>
             <h2 style={styles.sectionTitle}>
@@ -316,7 +316,7 @@ export default function AboutPage() {
             <p style={{ color: "#475569", lineHeight: 1.6 }}>
               Née d'une expertise rigoureuse en maintenance électronique, en réseaux industriels et en cybersécurité, 
               <strong style={{ color: NAVY, fontWeight: 600 }}> Baol Technologies</strong> s'est imposée comme le partenaire 
-              stratégique des structures exigeantes.
+              stratégique des structures exigences.
             </p>
           </div>
           
@@ -346,7 +346,7 @@ export default function AboutPage() {
       
 
       {/* HISTOIRE SECTION */}
-      <section style={{ maxWidth: "1200px", margin: isMobile ? "50px auto" : "100px auto", padding: "0 16px" }}>
+      <section style={{ maxWidth: "1200px", margin: isMobile ? "60px auto" : "100px auto", padding: "0 16px" }}>
         <div style={{ 
           background: "#fff", 
           borderRadius: "32px", 
@@ -359,7 +359,7 @@ export default function AboutPage() {
             <span style={{ color: BLUE, fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", display: "block", marginBottom: "12px" }}>
               Parcours & Évolution
             </span>
-            <h2 style={{ ...styles.sectionTitle, fontSize: isMobile ? "28px" : "36px", marginBottom: "16px" }}>Notre Histoire</h2>
+            <h2 style={{ ...styles.sectionTitle, fontSize: isMobile ? "26px" : "36px", marginBottom: "16px" }}>Notre Histoire</h2>
             <p style={{ color: "#64748b", fontSize: "15px", maxWidth: "600px", margin: "0 auto" }}>
               Une aventure bâtie sur l'expérience terrain et la passion des technologies.
             </p>
@@ -367,7 +367,6 @@ export default function AboutPage() {
 
           <div style={{ position: "relative", maxWidth: "850px", margin: "0 auto", padding: "10px 0" }}>
             
-            {/* Ligne masquée sur mobile pour éviter les décalages visuels compliqués */}
             {!isMobile && (
               <div style={{ 
                 position: "absolute", left: "31px", top: "40px", bottom: "40px", width: "2px", 
@@ -382,7 +381,7 @@ export default function AboutPage() {
                 display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
                 boxShadow: "0 0 0 6px #fff", fontSize: "15px", fontWeight: 800, color: BLUE, flexShrink: 0
               }}>2022</div>
-              <div style={{ flex: 1, paddingTop: isMobile ? "0px" : "12px" }}>
+              <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "8px" }}>Les Prestations Indépendantes</h3>
                 <p style={{ color: "#475569", lineHeight: 1.7, margin: 0, fontSize: "15px" }}>
                   L'aventure qui a conduit à la création de Baol Technologies a débuté en 2022 à travers des prestations indépendantes de maintenance électronique, informatique et réseau réalisées auprès de particuliers, d'entreprises et d'organisations.
@@ -397,7 +396,7 @@ export default function AboutPage() {
                 display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
                 boxShadow: "0 0 0 6px #fff", fontSize: "18px", fontWeight: 800, color: BLUE, flexShrink: 0
               }}>🚀</div>
-              <div style={{ flex: 1, paddingTop: isMobile ? "0px" : "12px" }}>
+              <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "8px" }}>Diversification &amp; Expansion</h3>
                 <p style={{ color: "#475569", lineHeight: 1.7, margin: 0, fontSize: "15px" }}>
                   Au fil des missions, les besoins des clients se sont diversifiés et les projets sont devenus plus ambitieux. Pour répondre efficacement à cette demande croissante, plusieurs techniciens et spécialistes ont été mobilisés afin d'apporter des solutions toujours plus complètes et performantes.
@@ -412,7 +411,7 @@ export default function AboutPage() {
                 display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
                 boxShadow: "0 0 0 6px #fff", fontSize: "18px", fontWeight: 800, color: BLUE, flexShrink: 0
               }}>🏢</div>
-              <div style={{ flex: 1, paddingTop: isMobile ? "0px" : "12px" }}>
+              <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: "18px", fontWeight: 700, color: NAVY, marginBottom: "8px" }}>Naissance d'un Écosystème Global</h3>
                 <p style={{ color: "#475569", lineHeight: 1.7, margin: 0, fontSize: "15px" }}>
                   Cette dynamique a progressivement donné naissance à une structure organisée, capable d'accompagner les entreprises dans les domaines des infrastructures réseau, de la cybersécurité, du développement d'applications, de l'intelligence artificielle, des systèmes connectés et de la maintenance technique spécialisée.
@@ -427,7 +426,7 @@ export default function AboutPage() {
                 display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
                 boxShadow: "0 0 0 6px #fff", fontSize: "13px", fontWeight: 800, color: "#fff", flexShrink: 0
               }}>BAOL</div>
-              <div style={{ flex: 1, paddingTop: isMobile ? "0px" : "12px" }}>
+              <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: "18px", fontWeight: 700, color: BLUE, marginBottom: "8px" }}>Une Équipe Consolidée</h3>
                 <p style={{ color: "#475569", lineHeight: 1.7, margin: 0, fontSize: "15px", fontWeight: 500 }}>
                   Aujourd'hui, Baol Technologies s'appuie sur une équipe composée d'une dizaine de techniciens, ingénieurs et consultants engagés autour d'un même objectif : fournir des solutions fiables, innovantes et adaptées aux réalités du marché africain.
@@ -451,7 +450,7 @@ export default function AboutPage() {
             alignItems: "start" 
           }}>
             
-            {/* Côté Gauche - Profil */}
+            {/* Profil Card */}
             <div style={{
               background: `linear-gradient(135deg, ${NAVY} 0%, #0a2a4a 100%)`,
               borderRadius: "24px",
@@ -492,7 +491,7 @@ export default function AboutPage() {
               <div style={{ width: "40px", height: "3px", background: BLUE, margin: "0 auto" }} />
             </div>
 
-            {/* Côté Droit - Message */}
+            {/* Message Right */}
             <div style={{ flex: 1 }}>
               <span style={{ color: BLUE, fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", display: "block", marginBottom: "12px" }}>
                 Édito de la direction
@@ -625,7 +624,43 @@ export default function AboutPage() {
                   <input type="tel" name="tel" required value={formData.tel} onChange={handleChange} style={styles.input} />
                 </div>
               </div>
-              {/* Reste du formulaire inchangé pour des raisons de clarté */}
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: NAVY, marginBottom: "6px", display: "block" }}>Nom de l'entreprise ou Organisation</label>
+                <input type="text" name="entreprise" value={formData.entreprise} onChange={handleChange} style={styles.input} />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: NAVY, marginBottom: "6px", display: "block" }}>Service Principal *</label>
+                <select name="service" value={formData.service} onChange={handleChange} style={styles.select}>
+                  <option value="Infrastructure">Infrastructure Réseau &amp; Télécoms</option>
+                  <option value="Cybersecurite">Cybersécurité &amp; Audit</option>
+                  <option value="IoT">IoT &amp; Systèmes Connectés</option>
+                  <option value="Maintenance">Maintenance Électronique Spécialisée</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: "24px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: NAVY, marginBottom: "6px", display: "block" }}>Détails de votre besoin technique *</label>
+                <textarea name="detail" rows={4} required value={formData.detail} onChange={handleChange} style={styles.textarea} placeholder="Décrivez votre projet..." />
+              </div>
+
+              <div style={{ textAlign: "right" as const }}>
+                <button type="submit" disabled={isSubmitting} style={styles.button}>
+                  {isSubmitting ? "Envoi en cours..." : "Envoyer ma demande"}
+                </button>
+              </div>
+
+              {submitStatus === "success" && (
+                <p style={{ color: "#10b981", fontSize: "14px", fontWeight: 600, marginTop: "16px", textAlign: "center" }}>
+                  ✓ Demande transmise avec succès ! Notre équipe vous recontactera sous 24h.
+                </p>
+              )}
+              {submitStatus === "error" && (
+                <p style={{ color: "#ef4444", fontSize: "14px", fontWeight: 600, marginTop: "16px", textAlign: "center" }}>
+                  ✕ Une erreur est survenue lors de l'envoi. Veuillez réessayer.
+                </p>
+              )}
             </form>
           </div>
         </div>
