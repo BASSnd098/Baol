@@ -335,7 +335,7 @@ export default function ContactPage() {
                   onMouseEnter={(e) => e.currentTarget.style.color = "#1557d9"}
                   onMouseLeave={(e) => e.currentTarget.style.color = BLUE}
                 >
-                  contact@baoltechnologies.com
+                  contact@baoltechnologie.com
                 </a>
                 <p style={styles.infoDesc}>Pour vos cahiers des charges et demandes de cotation</p>
               </div>

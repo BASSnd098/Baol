@@ -71,6 +71,10 @@ export default function Footer() {
               <span className="text-sm">support@baoltechnologie.com</span>
             </li>
             <li className="flex items-start gap-3">
+              <Mail size={20} className="text-blue-500 shrink-0" />
+              <span className="text-sm">contact@baoltechnologie.com</span>
+            </li>
+            <li className="flex items-start gap-3">
               <MapPin size={20} className="text-blue-500 shrink-0" />
               <div>
                 <p className="text-sm">Dakar, Sénégal</p>

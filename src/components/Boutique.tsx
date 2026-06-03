@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 
+import waveLogo from '../assets/wave.png';
+import orangeMoneyLogo from '../assets/OrangeMoney.png';
+import freeMoneyLogo from '../assets/free-money.png';
+
 // ═══════════════════════════════════════════════════════════════════
 //   CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════
@@ -16,10 +20,12 @@ const genOrderId = () =>
 
 const CATEGORIES = ["Tous", "Ordinateurs", "IoT", "Réseaux", "Sécurité", "Stockage", "Logiciels"];
 
+
+// 2. CONFIGURATION DES MOYENS DE PAIEMENT
 const PAYMENT_METHODS = [
-  { id: "wave", label: "Wave", icon: "💙", color: "#1a85e8" },
-  { id: "orange_money", label: "Orange Money", icon: "🟠", color: "#ff6600" },
-  { id: "free_money", label: "Free Money", icon: "💚", color: "#00b050" },
+  { id: "wave", label: "Wave", icon: waveLogo, color: "#1a85e8" },
+  { id: "orange_money", label: "Orange Money", icon: orangeMoneyLogo, color: "#ff6600" },
+  { id: "free_money", label: "Free Money", icon: freeMoneyLogo, color: "#00b050" },
   { id: "livraison", label: "Paiement à la livraison", icon: "🚚", color: "#6b7280" },
 ];
 
@@ -467,40 +473,113 @@ function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, re
 // ═══════════════════════════════════════════════════════════════════
 //   CHECKOUT PAGE (Fermeture et structure complétées proprement)
 // ═══════════════════════════════════════════════════════════════════
-function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, setPaymentMethod, cart, cartTotal, submitOrder }: { setPage: (p: string) => void; checkoutForm: any; setCheckoutForm: React.Dispatch<React.SetStateAction<any>>; paymentMethod: string; setPaymentMethod: (m: string) => void; cart: any[]; cartTotal: number; submitOrder: () => void }) {
+function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, setPaymentMethod, cart, cartTotal, submitOrder }: {
+  setPage: (p: string) => void;
+  checkoutForm: any;
+  setCheckoutForm: React.Dispatch<React.SetStateAction<any>>;
+  paymentMethod: string;
+  setPaymentMethod: (m: string) => void;
+  cart: any[];
+  cartTotal: number;
+  submitOrder: () => void;
+}) {
   const set = (k: string, v: any) => setCheckoutForm((f: any) => ({ ...f, [k]: v }));
+
+  const PAYMENT_LINKS: Record<string, string> = {
+    wave:         "https://pay.wave.com/m/M_sn_fV_FTOiXLSYI/c/sn/",
+    orange_money: "https://pay.orange.com/VOTRE_LIEN_ICI",
+    free_money:   "https://pay.freemoney.com/VOTRE_LIEN_ICI",
+  };
+
+  const buttonConfig: Record<string, { label: string; bg: string }> = {
+    wave:         { label: "Payer avec Wave 💙",         bg: "#1a85e8" },
+    orange_money: { label: "Payer avec Orange Money 🟠", bg: "#ff6600" },
+    free_money:   { label: "Payer avec Free Money 💚",   bg: "#00b050" },
+    livraison:    { label: "Commander via WhatsApp 🚀",  bg: "#0f1623" },
+  };
+
+  const formIsValid =
+    checkoutForm.nom?.trim() &&
+    checkoutForm.telephone?.trim() &&
+    checkoutForm.adresse?.trim();
+
+  const handleConfirm = () => {
+    if (!formIsValid) {
+      alert("Veuillez remplir les champs obligatoires (Nom, Téléphone, Adresse).");
+      return;
+    }
+    const paymentLink = PAYMENT_LINKS[paymentMethod];
+    if (paymentLink) {
+      window.open(paymentLink, "_blank");
+      submitOrder();
+    } else {
+      submitOrder();
+    }
+  };
+
+  const btn = buttonConfig[paymentMethod] ?? { label: "Confirmer la commande", bg: "#0f1623" };
+
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
-      <button onClick={() => setPage("boutique")} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", marginBottom: 28, fontWeight: 600, fontSize: 14 }}>← Retour</button>
+      <button onClick={() => setPage("boutique")}
+        style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", marginBottom: 28, fontWeight: 600, fontSize: 14 }}>
+        ← Retour
+      </button>
       <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 32, color: "#0f1623" }}>Finaliser la commande</h1>
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 32 }}>
+
+        {/* ── Colonne gauche ── */}
         <div>
+          {/* Informations de livraison */}
           <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #e5e7eb", marginBottom: 20 }}>
             <h3 style={{ fontWeight: 700, marginBottom: 18, color: "#0f1623", fontSize: 15 }}>Informations de livraison</h3>
             {[
-              { key: "nom", label: "Nom complet *", type: "text" },
-              { key: "email", label: "Email", type: "email" },
-              { key: "telephone", label: "Téléphone *", type: "tel" },
+              { key: "nom",       label: "Nom complet *", type: "text"  },
+              { key: "email",     label: "Email",          type: "email" },
+              { key: "telephone", label: "Téléphone *",   type: "tel"   },
             ].map((f: any) => (
-              <input key={f.key} type={f.type} placeholder={f.label} value={checkoutForm[f.key]}
+              <input key={f.key} type={f.type} placeholder={f.label}
+                value={checkoutForm[f.key]}
                 onChange={e => set(f.key, e.target.value)}
                 style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", marginBottom: 12, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
             ))}
-            <textarea placeholder="Adresse de livraison *" value={checkoutForm.adresse} onChange={e => set("adresse", e.target.value)} rows={3}
+            <textarea placeholder="Adresse de livraison *" value={checkoutForm.adresse}
+              onChange={e => set("adresse", e.target.value)} rows={3}
               style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box" }} />
           </div>
+
+          {/* Moyens de paiement */}
           <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #e5e7eb" }}>
             <h3 style={{ fontWeight: 700, marginBottom: 18, color: "#0f1623", fontSize: 15 }}>Moyen de paiement</h3>
             {PAYMENT_METHODS.map(pm => (
               <div key={pm.id} onClick={() => setPaymentMethod(pm.id)}
-                style={{ padding: "13px 16px", borderRadius: 12, cursor: "pointer", border: `2px solid ${paymentMethod === pm.id ? pm.color : "#e5e7eb"}`, background: paymentMethod === pm.id ? pm.color + "10" : "#fff", marginBottom: 10, display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
-                <span style={{ fontSize: 20 }}>{pm.icon}</span>
-                <span style={{ fontWeight: 600, color: "#374151", fontSize: 14 }}>{pm.label}</span>
-                {paymentMethod === pm.id && <span style={{ marginLeft: "auto", color: pm.color, fontWeight: 700 }}>✓</span>}
+                style={{ padding: "13px 16px", borderRadius: 12, cursor: "pointer", border: `2px solid ${paymentMethod === pm.id ? pm.color : "#e5e7eb"}`, background: paymentMethod === pm.id ? pm.color + "10" : "#fff", marginBottom: 10, display: "flex", alignItems: "center", gap: 12, transition: "all 0.15s" }}>
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24 }}>
+                  {typeof pm.icon === "string" && pm.icon.length <= 4 ? (
+                    <span style={{ fontSize: 20 }}>{pm.icon}</span>
+                  ) : (
+                    <img src={pm.icon} alt={pm.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  )}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontWeight: 600, color: "#374151", fontSize: 14 }}>{pm.label}</span>
+                  <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                    {pm.id === "livraison" ? "Commande envoyée via WhatsApp" : "Paiement en ligne sécurisé"}
+                  </div>
+                </div>
+
+                {paymentMethod === pm.id && (
+                  <span style={{ color: pm.color, fontWeight: 700 }}>✓</span>
+                )}
               </div>
             ))}
           </div>
         </div>
+
+        {/* ── Colonne droite : récapitulatif ── */}
         <div style={{ background: "#fff", borderRadius: 16, padding: 22, border: "1px solid #e5e7eb", alignSelf: "start", position: "sticky", top: 80 }}>
           <h3 style={{ fontWeight: 700, marginBottom: 16, color: "#0f1623", fontSize: 15 }}>Récapitulatif</h3>
           {cart.map(item => (
@@ -513,9 +592,30 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
             <span style={{ color: "#0f1623" }}>Total</span>
             <span style={{ color: "#1e40af" }}>{formatPrix(cartTotal)}</span>
           </div>
-          <button onClick={submitOrder} style={{ width: "100%", padding: "12px", background: "#0f1623", color: "#fff", border: "none", borderRadius: 50, fontWeight: 700, cursor: "pointer", fontSize: 14, marginTop: 18, boxShadow: "0 4px 12px rgba(15,22,35,0.15)" }}>
-            Envoyer la commande via WhatsApp 🚀
+
+          {/* Note contextuelle */}
+          {paymentMethod !== "livraison" && PAYMENT_LINKS[paymentMethod] && (
+            <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: "#eff6ff", border: "1px solid #bfdbfe", fontSize: 12, color: "#1e40af" }}>
+              💳 Vous serez redirigé vers la page de paiement sécurisée, puis votre commande sera confirmée.
+            </div>
+          )}
+          {paymentMethod === "livraison" && (
+            <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: "#f0fdf4", border: "1px solid #bbf7d0", fontSize: 12, color: "#15803d" }}>
+              📦 Votre commande sera envoyée directement sur WhatsApp pour confirmation.
+            </div>
+          )}
+
+          {/* Bouton principal */}
+          <button onClick={handleConfirm}
+            style={{ width: "100%", padding: "13px", background: btn.bg, color: "#fff", border: "none", borderRadius: 50, fontWeight: 700, cursor: "pointer", fontSize: 14, marginTop: 18, boxShadow: "0 4px 12px rgba(15,22,35,0.15)", transition: "opacity 0.15s", opacity: formIsValid ? 1 : 0.5 }}>
+            {btn.label}
           </button>
+
+          {!formIsValid && (
+            <p style={{ fontSize: 11, color: "#ef4444", textAlign: "center", marginTop: 8 }}>
+              * Remplissez Nom, Téléphone et Adresse pour continuer
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -525,17 +625,81 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
 // ═══════════════════════════════════════════════════════════════════
 //   SUCCESS PAGE
 // ═══════════════════════════════════════════════════════════════════
-function SuccessPage({ setPage }: { setPage: (p: string) => void }) {
+function SuccessPage({ setPage, orderInfo }: { 
+  setPage: (p: string) => void;
+  orderInfo?: { paymentMethod: string; whatsappUrl?: string };
+}) {
+  const steps = [
+    {
+      icon: "✅",
+      label: "Commande reçue",
+      sub: "Envoyée sur WhatsApp",
+      done: true,
+    },
+    {
+      icon: "⏳",
+      label: "Confirmation en attente",
+      sub: "Le vendeur va valider votre commande",
+      done: false,
+    },
+    {
+      icon: "🚚",
+      label: "Livraison en cours",
+      sub: "Votre colis est en route",
+      done: false,
+    },
+  ];
+
   return (
-    <div style={{ maxWidth: 600, margin: "100px auto 0", padding: "0 24px", textAlign: "center", fontFamily: "system-ui, sans-serif" }}>
-      <div style={{ fontSize: 54, marginBottom: 16 }}>🎉</div>
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: "#0f1623", marginBottom: 12 }}>Commande Envoyée !</h1>
-      <p style={{ color: "#6b7280", fontSize: 15, lineHeight: 1.6, marginBottom: 24 }}>
-        Votre demande a bien été générée. Si la fenêtre WhatsApp ne s'est pas ouverte automatiquement, veuillez vérifier vos bloqueurs de fenêtres pop-up ou utiliser le bouton flottant.
+    <div style={{ maxWidth: 560, margin: "60px auto 0", padding: "0 24px", textAlign: "center", fontFamily: "system-ui, sans-serif" }}>
+
+      {/* Icône succès */}
+      <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 28 }}>✓</div>
+
+      <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f1623", marginBottom: 10 }}>Commande envoyée !</h1>
+      <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+        Votre commande a été transmise via WhatsApp. Nous vous confirmerons la disponibilité et la livraison sous peu.
       </p>
-      <button onClick={() => setPage("boutique")} style={{ padding: "10px 24px", background: "#1e40af", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-        Retourner à la boutique
-      </button>
+
+      {/* Timeline de suivi */}
+      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "20px 24px", textAlign: "left", marginBottom: 24 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".05em", margin: "0 0 16px" }}>
+          Suivi de commande
+        </p>
+
+        {steps.map((step, i) => (
+          <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: step.done ? "#dcfce7" : "#f3f4f6", border: step.done ? "none" : "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>
+                {step.icon}
+              </div>
+              {i < steps.length - 1 && (
+                <div style={{ width: 1, height: 32, background: "#e5e7eb" }} />
+              )}
+            </div>
+            <div style={{ paddingTop: 6, paddingBottom: i < steps.length - 1 ? 0 : 0 }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: step.done ? "#0f1623" : "#9ca3af", margin: 0 }}>{step.label}</p>
+              <p style={{ fontSize: 12, color: "#9ca3af", margin: "2px 0 0" }}>{step.sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Boutons */}
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+        {orderInfo?.whatsappUrl && (
+          <button
+            onClick={() => window.open(orderInfo.whatsappUrl, "_blank")}
+            style={{ padding: "10px 20px", background: "#25d366", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
+            📲 Ouvrir WhatsApp
+          </button>
+        )}
+        <button
+          onClick={() => setPage("boutique")}
+          style={{ padding: "10px 20px", background: "#0f1623", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
+          🛍️ Retour boutique
+        </button>
+      </div>
     </div>
   );
 }
