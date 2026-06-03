@@ -334,8 +334,9 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+      
 
-      {/* HISTOIRE SECTION - DESIGN CHRONOLOGIQUE PREMIUM */}
+      {/* HISTOIRE SECTION */}
       <section style={{ maxWidth: "1200px", margin: "100px auto", padding: "0 24px" }}>
         <div style={{ 
           background: "#fff", 
@@ -450,6 +451,10 @@ export default function AboutPage() {
 
         </div>
       </section>
+
+
+
+
       {/* MOT DU DIRECTEUR */}
       <section style={{ background: "#f8fafc", padding: "100px 24px", position: "relative" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -509,7 +514,7 @@ export default function AboutPage() {
                 Modou Mamoune Ndoye
               </h3>
               <p style={{ color: "#94a3b8", fontSize: "14px", fontWeight: 500, marginBottom: "28px", textTransform: "uppercase", letterSpacing: "1px" }}>
-                Fondateur & Directeur Général
+                Fondateur & CEO
               </p>
               
               <div style={{ width: "40px", height: "3px", background: BLUE, margin: "0 auto" }} />
@@ -531,7 +536,7 @@ export default function AboutPage() {
               </span>
               
               <h2 style={{ ...styles.sectionTitle, fontSize: "40px", marginBottom: "32px", letterSpacing: "-1px" }}>
-                Mot du Directeur
+                Message du CEO
               </h2>
 
               {/* Texte principal avec un style de lecture haut de gamme */}

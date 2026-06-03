@@ -94,6 +94,10 @@ export default function Footer() {
       {/* Barre de copyright */}
       <div className="mt-16 pt-8 border-t border-gray-800 text-center text-sm">
         <p>© 2026 Baol Technologies. Tous droits réservés.</p>
+        
+             <p className="mt-2 text-gray-400">
+                 NINEA : XXXXXXXX • RCCM : SN-DKR-XXXX-XXXX
+           </p>
       </div>
     </footer>
   );
