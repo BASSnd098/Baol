@@ -63,7 +63,7 @@ export default function Navbar() {
         <Link to="/" className={mobileLinkStyle} onClick={() => setIsOpen(false)}>Accueil</Link>
         <Link to="/services" className={mobileLinkStyle} onClick={() => setIsOpen(false)}>Services</Link>
         <Link to="/boutique" className={mobileLinkStyle} onClick={() => setIsOpen(false)}>Boutique</Link>
-        <Link to="/a-propos" className={mobileLinkStyle} onClick={() => setIsOpen(false)}>À propos</Link>
+        <Link to="/apropos" className={mobileLinkStyle} onClick={() => setIsOpen(false)}>À propos</Link>
         <Link 
           to="/contact" 
           className="btn btn-primary bg-blue-600 border-none w-full mt-2 text-white" 
