@@ -100,7 +100,7 @@ export default function Footer() {
         <p>© 2026 Baol Technologies. Tous droits réservés.</p>
         
              <p className="mt-2 text-gray-400">
-                 NINEA : XXXXXXXX • RCCM : SN-DKR-XXXX-XXXX
+                 NINEA : 013104295  •  RCCM : SN.DKR.2026.A.20631
            </p>
       </div>
     </footer>

@@ -20,7 +20,7 @@ export default function Navbar() {
             className="w-10 h-10 rounded-full border border-blue-500/30" 
           />
           <span className="text-lg md:text-xl font-bold tracking-tight text-white whitespace-nowrap">
-             Baol_<span className="text-blue-400">Technologies</span>
+             Baol_<span className="text-blue-400">Technologie</span>
           </span>
         </Link>
       </div>
