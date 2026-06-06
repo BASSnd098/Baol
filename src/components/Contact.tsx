@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const NAVY = "#02101f";
+//const NAVY = "#02101f";
 const BLUE = "#1a6cff";
 const FORMSPREE_URL = "https://formspree.io/f/mwvzvwdq";
 

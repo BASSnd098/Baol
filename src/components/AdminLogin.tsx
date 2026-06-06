@@ -32,7 +32,7 @@ export default function AdminLogin() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: `linear-gradient(135deg, ${NAVY} 0%, #0a1f3d 60%, #0d2a4a 100%)`,
+      background: `linear-gradient(135deg, #000080 0%, #0a1f3d 60%, #0d2a4a 100%)`,
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: "24px", fontFamily: "'DM Sans', sans-serif",
     }}>

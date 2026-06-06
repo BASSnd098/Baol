@@ -7,7 +7,7 @@ import freeMoneyLogo  from '../assets/free-money.png';
 // ═══════════════════════════════════════════════════════════════════
 //   CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════
-const WHATSAPP_NUMBER = "221784634165";
+const WHATSAPP_NUMBER = "221779300909";
 const CART_KEY        = "baol_cart_v3";
 
 const formatPrix = (p: number | string) => {
