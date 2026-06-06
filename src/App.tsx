@@ -29,19 +29,50 @@ interface Produit {
   specs: Record<string, string>;
 }
 
-// Convertir format API → format frontend avec typage explicite de l'argument
-const formatProduct = (p: any): Produit => ({
-  id:          p._id,
-  nom:         p.name,
-  prix:        p.price,
-  categorie:   p.category,
-  description: p.description || "",
-  stock:       Number(p.stock) > 0,
-  img:         p.images?.[0] || "https://via.placeholder.com/600x400?text=Baol_Technologies",
-  images:      p.images || [],
-  specs:       p.specs || {},
-});
+// ─── HELPER ───────────────────────────────────────────────────────────────────
+// Extrait une URL propre depuis un item images[] qui peut être
+// une string OU un objet Cloudinary { url, public_id, _id }
+function extractUrl(item: any): string {
+  if (!item) return "";
+  if (typeof item === "string") return item.trim();
+  return (item.url || "").trim();
+}
 
+// ─── FORMATEUR ────────────────────────────────────────────────────────────────
+// Convertit le format brut de l'API (clés EN + images en objets) vers le
+// format unifié Produit utilisé par tous les composants (clés FR + images string[])
+const formatProduct = (p: any): Produit => {
+  // Tableau d'URLs propres (filtre les vides)
+  const images: string[] = (p.images || [])
+    .map(extractUrl)
+    .filter(Boolean);
+
+  // Image principale :
+  //   1. champ p.img s'il existe et est une URL valide
+  //   2. sinon premier élément de images[]
+  //   3. sinon chaîne vide (les composants afficheront leur placeholder)
+  const img =
+    typeof p.img === "string" && p.img.trim() && p.img.trim() !== "undefined"
+      ? p.img.trim()
+      : images[0] || "";
+
+  return {
+    id:          p._id          || p.id                      || "",
+    nom:         p.name         || p.nom                     || "",
+    prix:        p.price        ?? p.prix                    ?? 0,
+    categorie:   p.category     || p.categorie               || "Général",
+    description: p.description                               || "",
+    // stock peut être boolean (true/false) ou number (0/1) selon la version du backend
+    stock:       typeof p.stock === "boolean"
+                   ? p.stock
+                   : Number(p.stock) > 0,
+    img,
+    images,
+    specs:       p.specs        || {},
+  };
+};
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [listeProduits, setListeProduits] = useState<Produit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,8 +115,8 @@ export default function App() {
               <Route path="/"         element={<><Hero /><ServicesSimple /></>} />
               <Route path="/services" element={<ServicesDetail />} />
               <Route path="/boutique" element={<Boutique produits={listeProduits} />} />
-              <Route path="/apropos" element={<Apropos />} />
-              <Route path="/contact" element={<Contact />} />
+              <Route path="/apropos"  element={<Apropos />} />
+              <Route path="/contact"  element={<Contact />} />
 
               {/* ── Login admin ───────────────────────────────────── */}
               <Route path="/admin/login" element={<AdminLogin />} />

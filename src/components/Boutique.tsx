@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 
-import waveLogo from '../assets/wave.png';
+import waveLogo       from '../assets/wave.png';
 import orangeMoneyLogo from '../assets/OrangeMoney.png';
-import freeMoneyLogo from '../assets/free-money.png';
+import freeMoneyLogo  from '../assets/free-money.png';
 
 // ═══════════════════════════════════════════════════════════════════
 //   CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════
 const WHATSAPP_NUMBER = "221784634165";
-const CART_KEY = "baol_cart_v3";
+const CART_KEY        = "baol_cart_v3";
 
 const formatPrix = (p: number | string) => {
   const n = typeof p === "number" ? p : Number(p) || 0;
@@ -20,14 +20,27 @@ const genOrderId = () =>
 
 const CATEGORIES = ["Tous", "Ordinateurs", "IoT", "Réseaux", "Sécurité", "Stockage", "Logiciels"];
 
-
-// 2. CONFIGURATION DES MOYENS DE PAIEMENT
 const PAYMENT_METHODS = [
-  { id: "wave", label: "Wave", icon: waveLogo, color: "#1a85e8" },
-  { id: "orange_money", label: "Orange Money", icon: orangeMoneyLogo, color: "#ff6600" },
-  { id: "free_money", label: "Free Money", icon: freeMoneyLogo, color: "#00b050" },
-  { id: "livraison", label: "Paiement à la livraison", icon: "🚚", color: "#6b7280" },
+  { id: "wave",         label: "Wave",                    icon: waveLogo,        color: "#1a85e8" },
+  { id: "orange_money", label: "Orange Money",            icon: orangeMoneyLogo, color: "#ff6600" },
+  { id: "free_money",   label: "Free Money",              icon: freeMoneyLogo,   color: "#00b050" },
+  { id: "livraison",    label: "Paiement à la livraison", icon: "🚚",            color: "#6b7280" },
 ];
+
+// ─── HELPER IMAGE ─────────────────────────────────────────────────────────────
+// Les produits arrivent normalisés depuis App.tsx : img est déjà une string URL.
+// Cette fonction est un filet de sécurité si jamais un objet passe quand même.
+function getProductImage(product: any): string {
+  if (typeof product.img === "string" && product.img.trim() && product.img !== "undefined") {
+    return product.img.trim();
+  }
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    const first = product.images[0];
+    const url = typeof first === "string" ? first : (first?.url || "");
+    if (url.trim()) return url.trim();
+  }
+  return "/no-image.png";
+}
 
 // ═══════════════════════════════════════════════════════════════════
 //   COMPOSANT PRINCIPAL — reçoit `produits` depuis App.tsx
@@ -36,16 +49,14 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
   const [cart, setCart] = useState<any[]>(() => {
     try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch { return []; }
   });
-  useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  }, [cart]);
+  useEffect(() => { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }, [cart]);
 
-  const [page, setPage] = useState("boutique");
+  const [page,            setPage]            = useState("boutique");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
-  const [checkoutForm, setCheckoutForm] = useState({ nom: "", email: "", telephone: "", adresse: "" });
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [cartOpen,        setCartOpen]        = useState(false);
+  const [toast,           setToast]           = useState<{ message: string; type: string } | null>(null);
+  const [checkoutForm,    setCheckoutForm]    = useState({ nom: "", email: "", telephone: "", adresse: "" });
+  const [paymentMethod,   setPaymentMethod]   = useState("");
 
   const showToast = (message: string, type = "success") => {
     setToast({ message, type });
@@ -90,8 +101,8 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
       showToast("Veuillez choisir un moyen de paiement", "error"); return;
     }
     const orderId = genOrderId();
-    const pm = PAYMENT_METHODS.find(p => p.id === paymentMethod)?.label || paymentMethod;
-    const lignes = cart.map(item => `• ${item.nom} ×${item.qty} = ${formatPrix(Number(item.prix) * item.qty)}`).join("\n");
+    const pm      = PAYMENT_METHODS.find(p => p.id === paymentMethod)?.label || paymentMethod;
+    const lignes  = cart.map(item => `• ${item.nom} ×${item.qty} = ${formatPrix(Number(item.prix) * item.qty)}`).join("\n");
     const message =
       `🛒 *NOUVELLE COMMANDE — Baol Technologies*\n\n` +
       `📋 Référence: ${orderId}\n` +
@@ -109,6 +120,7 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
     setPaymentMethod("");
   };
 
+  // Purge les articles du panier si le produit est hors stock ou disparu
   useEffect(() => {
     if (!produits.length) return;
     setCart(prev => prev.filter(item => {
@@ -168,6 +180,7 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
         handleCheckout={handleCheckout}
       />
 
+      {/* Bouton WhatsApp flottant */}
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour Baol_Technologies 👋, j'aimerais avoir des informations sur vos solutions.")}`}
         target="_blank"
@@ -192,9 +205,14 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   NAVBAR (setPage corrigé ici pour supprimer l'erreur de variable inutilisée)
+//   NAVBAR
 // ═══════════════════════════════════════════════════════════════════
-function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }: { setPage: (p: string) => void; setSelectedProduct: (p: any) => void; setCartOpen: (o: boolean) => void; cartCount: number }) {
+function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }: {
+  setPage: (p: string) => void;
+  setSelectedProduct: (p: any) => void;
+  setCartOpen: (o: boolean) => void;
+  cartCount: number;
+}) {
   return (
     <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(245,244,240,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #e5e7eb", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
       <button onClick={() => { setPage("boutique"); setSelectedProduct(null); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, fontWeight: 800, color: "#0f1623" }}>
@@ -213,9 +231,18 @@ function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }: { setPa
 // ═══════════════════════════════════════════════════════════════════
 //   PRODUCT CARD
 // ═══════════════════════════════════════════════════════════════════
-function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProduct, setPage }: { product: any; cart: any[]; updateQuantity: (id: string | number, delta: number) => void; addToCart: (p: any) => void; setSelectedProduct: (p: any) => void; setPage: (p: string) => void }) {
+function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProduct, setPage }: {
+  product: any;
+  cart: any[];
+  updateQuantity: (id: string | number, delta: number) => void;
+  addToCart: (p: any) => void;
+  setSelectedProduct: (p: any) => void;
+  setPage: (p: string) => void;
+}) {
   const [hovered, setHovered] = useState(false);
   const cartItem = cart.find(item => item.id === product.id);
+  // Utilise le helper pour résoudre l'URL quelle que soit la structure
+  const imgSrc = getProductImage(product);
 
   return (
     <div
@@ -223,10 +250,19 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
       onMouseLeave={() => setHovered(false)}
       style={{ background: "#fff", borderRadius: 16, overflow: "hidden", border: "1px solid #e5e7eb", transition: "all 0.25s", transform: hovered ? "translateY(-4px)" : "none", boxShadow: hovered ? "0 12px 40px rgba(0,0,0,0.12)" : "0 2px 8px rgba(0,0,0,0.04)", display: "flex", flexDirection: "column" }}
     >
-      <div style={{ height: 200, overflow: "hidden", position: "relative", cursor: "pointer", background: "#f3f4f6" }}
-        onClick={() => { setSelectedProduct(product); setPage("detail"); }}>
-        <img src={product.img || "https://via.placeholder.com/400x200?text=Baol+Technologies"} alt={product.nom}
-          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s", transform: hovered ? "scale(1.06)" : "scale(1)" }} />
+      <div
+        style={{ height: 200, overflow: "hidden", position: "relative", cursor: "pointer", background: "#f3f4f6" }}
+        onClick={() => { setSelectedProduct(product); setPage("detail"); }}
+      >
+        <img
+          src={imgSrc}
+          alt={product.nom}
+          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s", transform: hovered ? "scale(1.06)" : "scale(1)" }}
+          onError={e => {
+            (e.target as HTMLImageElement).src = "/no-image.png";
+            (e.target as HTMLImageElement).onerror = null;
+          }}
+        />
         {!product.stock && (
           <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.85)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ color: "#dc2626", fontWeight: 700, fontSize: 13 }}>Rupture de stock</span>
@@ -239,8 +275,10 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
 
       <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
         <div>
-          <h3 style={{ fontWeight: 700, fontSize: 14, color: "#0f1623", margin: 0, cursor: "pointer", lineHeight: 1.3 }}
-            onClick={() => { setSelectedProduct(product); setPage("detail"); }}>
+          <h3
+            style={{ fontWeight: 700, fontSize: 14, color: "#0f1623", margin: 0, cursor: "pointer", lineHeight: 1.3 }}
+            onClick={() => { setSelectedProduct(product); setPage("detail"); }}
+          >
             {product.nom}
           </h3>
           {product.description && (
@@ -256,20 +294,25 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button onClick={() => updateQuantity(product.id, -1)} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 15 }}>−</button>
               <span style={{ fontWeight: 700, minWidth: 16, textAlign: "center" }}>{cartItem.qty}</span>
-              <button onClick={() => updateQuantity(product.id, 1)} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", background: "#0f1623", color: "#fff", cursor: "pointer", fontSize: 15 }}>+</button>
+              <button onClick={() => updateQuantity(product.id, 1)}  style={{ width: 28, height: 28, borderRadius: "50%", border: "none", background: "#0f1623", color: "#fff", cursor: "pointer", fontSize: 15 }}>+</button>
             </div>
           ) : (
-            <button onClick={() => addToCart(product)} disabled={!product.stock}
-              style={{ padding: "8px 16px", borderRadius: 50, border: "none", background: product.stock ? "#0f1623" : "#d1d5db", color: "#fff", fontSize: 12, fontWeight: 600, cursor: product.stock ? "pointer" : "not-allowed", transition: "background 0.15s" }}>
+            <button
+              onClick={() => addToCart(product)}
+              disabled={!product.stock}
+              style={{ padding: "8px 16px", borderRadius: 50, border: "none", background: product.stock ? "#0f1623" : "#d1d5db", color: "#fff", fontSize: 12, fontWeight: 600, cursor: product.stock ? "pointer" : "not-allowed", transition: "background 0.15s" }}
+            >
               + Ajouter
             </button>
           )}
         </div>
 
-        <button onClick={() => { setSelectedProduct(product); setPage("detail"); }}
+        <button
+          onClick={() => { setSelectedProduct(product); setPage("detail"); }}
           style={{ width: "100%", padding: "7px", background: "transparent", border: "1px solid #e5e7eb", borderRadius: 50, fontSize: 12, fontWeight: 500, color: "#6b7280", cursor: "pointer", transition: "all 0.15s" }}
           onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#1e40af"; (e.target as HTMLElement).style.color = "#1e40af"; }}
-          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#e5e7eb"; (e.target as HTMLElement).style.color = "#6b7280"; }}>
+          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#e5e7eb";  (e.target as HTMLElement).style.color = "#6b7280"; }}
+        >
           Voir les détails →
         </button>
       </div>
@@ -280,9 +323,16 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
 // ═══════════════════════════════════════════════════════════════════
 //   BOUTIQUE PAGE
 // ═══════════════════════════════════════════════════════════════════
-function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedProduct, setPage }: { produits: any[]; cart: any[]; updateQuantity: (id: string | number, delta: number) => void; addToCart: (p: any) => void; setSelectedProduct: (p: any) => void; setPage: (p: string) => void }) {
+function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedProduct, setPage }: {
+  produits: any[];
+  cart: any[];
+  updateQuantity: (id: string | number, delta: number) => void;
+  addToCart: (p: any) => void;
+  setSelectedProduct: (p: any) => void;
+  setPage: (p: string) => void;
+}) {
   const [categorie, setCategorie] = useState("Tous");
-  const [search, setSearch] = useState("");
+  const [search,    setSearch]    = useState("");
 
   const filtered = produits.filter(p =>
     (categorie === "Tous" || p.categorie === categorie) &&
@@ -307,8 +357,12 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
             </button>
           ))}
         </div>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Rechercher..."
-          style={{ padding: "9px 16px", borderRadius: 50, border: "1.5px solid #e5e7eb", outline: "none", width: 220, fontSize: 14 }} />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="🔍 Rechercher..."
+          style={{ padding: "9px 16px", borderRadius: 50, border: "1.5px solid #e5e7eb", outline: "none", width: 220, fontSize: 14 }}
+        />
       </div>
 
       {filtered.length === 0 ? (
@@ -319,7 +373,15 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 24 }}>
           {filtered.map(product => (
-            <ProductCard key={product.id} product={product} cart={cart} updateQuantity={updateQuantity} addToCart={addToCart} setSelectedProduct={setSelectedProduct} setPage={setPage} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              cart={cart}
+              updateQuantity={updateQuantity}
+              addToCart={addToCart}
+              setSelectedProduct={setSelectedProduct}
+              setPage={setPage}
+            />
           ))}
         </div>
       )}
@@ -330,33 +392,68 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
 // ═══════════════════════════════════════════════════════════════════
 //   DETAIL PAGE
 // ═══════════════════════════════════════════════════════════════════
-function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct, addToCart, cart }: { selectedProduct: any; produits: any[]; setPage: (page: string) => void; setSelectedProduct: (p: any) => void; addToCart: (p: any) => void; cart: any[] }) {
+function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct, addToCart, cart }: {
+  selectedProduct: any;
+  produits: any[];
+  setPage: (page: string) => void;
+  setSelectedProduct: (p: any) => void;
+  addToCart: (p: any) => void;
+  cart: any[];
+}) {
   const [activeImg, setActiveImg] = useState(0);
-  const images = (p.images && p.images.length > 0) ? p.images : [p.img].filter(Boolean);
-  const cartItem = cart.find(item => item.id === p.id);
+
+  // images[] est déjà un string[] normalisé ; on utilise img en fallback
+  const images: string[] =
+    p.images && p.images.length > 0
+      ? p.images
+      : [getProductImage(p)].filter(u => u !== "/no-image.png");
+
+  const displayImages = images.length > 0 ? images : ["/no-image.png"];
+
+  const cartItem  = cart.find(item => item.id === p.id);
   const similaires = produits.filter(x => x.categorie === p.categorie && x.id !== p.id).slice(0, 4);
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
-      <button onClick={() => { setPage("boutique"); setSelectedProduct(null); }}
-        style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", marginBottom: 28, fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+      <button
+        onClick={() => { setPage("boutique"); setSelectedProduct(null); }}
+        style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", marginBottom: 28, fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}
+      >
         ← Retour à la boutique
       </button>
 
       <div style={{ background: "#fff", borderRadius: 20, padding: "32px", border: "1px solid #e5e7eb", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, marginBottom: 40 }}>
         <div>
           <div style={{ borderRadius: 14, overflow: "hidden", background: "#f3f4f6", height: 340, marginBottom: 12, cursor: "zoom-in" }}>
-            <img src={images[activeImg] || "https://via.placeholder.com/600x400"} alt={p.nom}
+            <img
+              src={displayImages[activeImg]}
+              alt={p.nom}
               style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }}
               onMouseEnter={e => (e.target as HTMLElement).style.transform = "scale(1.06)"}
-              onMouseLeave={e => (e.target as HTMLElement).style.transform = "scale(1)"} />
+              onMouseLeave={e => (e.target as HTMLElement).style.transform = "scale(1)"}
+              onError={e => {
+                (e.target as HTMLImageElement).src = "/no-image.png";
+                (e.target as HTMLImageElement).onerror = null;
+              }}
+            />
           </div>
-          {images.length > 1 && (
+          {displayImages.length > 1 && (
             <div style={{ display: "flex", gap: 8 }}>
-              {images.map((img: string, i: number) => (
-                <div key={i} onClick={() => setActiveImg(i)}
-                  style={{ width: 66, height: 58, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: `2px solid ${activeImg === i ? "#1e40af" : "transparent"}`, opacity: activeImg === i ? 1 : 0.55, transition: "all 0.15s" }}>
-                  <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              {displayImages.map((img, i) => (
+                <div
+                  key={i}
+                  onClick={() => setActiveImg(i)}
+                  style={{ width: 66, height: 58, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: `2px solid ${activeImg === i ? "#1e40af" : "transparent"}`, opacity: activeImg === i ? 1 : 0.55, transition: "all 0.15s" }}
+                >
+                  <img
+                    src={img}
+                    alt=""
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={e => {
+                      (e.target as HTMLImageElement).src = "/no-image.png";
+                      (e.target as HTMLImageElement).onerror = null;
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -372,7 +469,7 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
               {p.stock ? "✓ En stock" : "✕ Rupture"}
             </span>
           </div>
-          <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.7 }}>{p.descriptionComplete || p.description}</p>
+          <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.7 }}>{p.description}</p>
 
           {p.specs && Object.keys(p.specs).length > 0 && (
             <div style={{ background: "#f9fafb", borderRadius: 12, padding: "14px 16px" }}>
@@ -391,8 +488,11 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
               <span style={{ color: "#059669", fontWeight: 600, fontSize: 13 }}>✓ {cartItem.qty} dans le panier</span>
             </div>
           ) : (
-            <button onClick={() => addToCart(p)} disabled={!p.stock}
-              style={{ padding: "13px 28px", background: p.stock ? "#0f1623" : "#d1d5db", color: "#fff", border: "none", borderRadius: 50, fontSize: 15, fontWeight: 600, cursor: p.stock ? "pointer" : "not-allowed", width: "100%", transition: "background 0.15s" }}>
+            <button
+              onClick={() => addToCart(p)}
+              disabled={!p.stock}
+              style={{ padding: "13px 28px", background: p.stock ? "#0f1623" : "#d1d5db", color: "#fff", border: "none", borderRadius: 50, fontSize: 15, fontWeight: 600, cursor: p.stock ? "pointer" : "not-allowed", width: "100%", transition: "background 0.15s" }}
+            >
               {p.stock ? "Ajouter au panier" : "Rupture de stock"}
             </button>
           )}
@@ -404,9 +504,15 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
           <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16, color: "#0f1623" }}>Produits similaires</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 18 }}>
             {similaires.map(s => (
-              <ProductCard key={s.id} product={s} cart={cart}
-                updateQuantity={() => {}} addToCart={addToCart}
-                setSelectedProduct={setSelectedProduct} setPage={setPage} />
+              <ProductCard
+                key={s.id}
+                product={s}
+                cart={cart}
+                updateQuantity={() => {}}
+                addToCart={addToCart}
+                setSelectedProduct={setSelectedProduct}
+                setPage={setPage}
+              />
             ))}
           </div>
         </div>
@@ -418,14 +524,23 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
 // ═══════════════════════════════════════════════════════════════════
 //   CART DRAWER
 // ═══════════════════════════════════════════════════════════════════
-function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, removeFromCart, cartTotal, handleCheckout }: { cartOpen: boolean; setCartOpen: (o: boolean) => void; cart: any[]; cartCount: number; updateQuantity: (id: string | number, delta: number) => void; removeFromCart: (id: string | number) => void; cartTotal: number; handleCheckout: () => void }) {
+function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, removeFromCart, cartTotal, handleCheckout }: {
+  cartOpen: boolean;
+  setCartOpen: (o: boolean) => void;
+  cart: any[];
+  cartCount: number;
+  updateQuantity: (id: string | number, delta: number) => void;
+  removeFromCart: (id: string | number) => void;
+  cartTotal: number;
+  handleCheckout: () => void;
+}) {
   return (
     <>
       {cartOpen && <div onClick={() => setCartOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 150 }} />}
       <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "100%", maxWidth: 420, background: "#fff", zIndex: 200, display: "flex", flexDirection: "column", boxShadow: "-8px 0 40px rgba(0,0,0,0.15)", transform: cartOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 0.3s ease" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0f1623", color: "#fff" }}>
           <span style={{ fontWeight: 700, fontSize: 16 }}>🛒 Panier ({cartCount})</span>
-          <button onClick={() => setCartOpen(false)} style={{ background: "none", backgroundColor: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: 30, height: 30, borderRadius: "50%", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <button onClick={() => setCartOpen(false)} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: 30, height: 30, borderRadius: "50%", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
@@ -436,7 +551,15 @@ function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, re
             </div>
           ) : cart.map(item => (
             <div key={item.id} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid #f3f4f6", alignItems: "center" }}>
-              <img src={item.img || "https://via.placeholder.com/60"} alt={item.nom} style={{ width: 56, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+              <img
+                src={getProductImage(item)}
+                alt={item.nom}
+                style={{ width: 56, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0 }}
+                onError={e => {
+                  (e.target as HTMLImageElement).src = "/no-image.png";
+                  (e.target as HTMLImageElement).onerror = null;
+                }}
+              />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontWeight: 600, fontSize: 13, color: "#0f1623", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nom}</p>
                 <p style={{ fontSize: 12, color: "#1e40af", fontWeight: 600, margin: "2px 0 6px" }}>{formatPrix(item.prix)}</p>
@@ -444,7 +567,7 @@ function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, re
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <button onClick={() => updateQuantity(item.id, -1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer" }}>−</button>
                     <span style={{ fontWeight: 700, fontSize: 13 }}>{item.qty}</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "none", background: "#0f1623", color: "#fff", cursor: "pointer" }}>+</button>
+                    <button onClick={() => updateQuantity(item.id, 1)}  style={{ width: 24, height: 24, borderRadius: "50%", border: "none", background: "#0f1623", color: "#fff", cursor: "pointer" }}>+</button>
                   </div>
                   <span style={{ fontWeight: 700, fontSize: 13 }}>{formatPrix(Number(item.prix) * item.qty)}</span>
                 </div>
@@ -471,7 +594,7 @@ function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, re
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   CHECKOUT PAGE (Fermeture et structure complétées proprement)
+//   CHECKOUT PAGE
 // ═══════════════════════════════════════════════════════════════════
 function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, setPaymentMethod, cart, cartTotal, submitOrder }: {
   setPage: (p: string) => void;
@@ -504,34 +627,24 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
     checkoutForm.adresse?.trim();
 
   const handleConfirm = () => {
-    if (!formIsValid) {
-      alert("Veuillez remplir les champs obligatoires (Nom, Téléphone, Adresse).");
-      return;
-    }
+    if (!formIsValid) { alert("Veuillez remplir les champs obligatoires (Nom, Téléphone, Adresse)."); return; }
     const paymentLink = PAYMENT_LINKS[paymentMethod];
-    if (paymentLink) {
-      window.open(paymentLink, "_blank");
-      submitOrder();
-    } else {
-      submitOrder();
-    }
+    if (paymentLink) { window.open(paymentLink, "_blank"); submitOrder(); }
+    else { submitOrder(); }
   };
 
   const btn = buttonConfig[paymentMethod] ?? { label: "Confirmer la commande", bg: "#0f1623" };
 
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
-      <button onClick={() => setPage("boutique")}
-        style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", marginBottom: 28, fontWeight: 600, fontSize: 14 }}>
+      <button onClick={() => setPage("boutique")} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", marginBottom: 28, fontWeight: 600, fontSize: 14 }}>
         ← Retour
       </button>
       <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 32, color: "#0f1623" }}>Finaliser la commande</h1>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 32 }}>
-
-        {/* ── Colonne gauche ── */}
         <div>
-          {/* Informations de livraison */}
+          {/* Informations livraison */}
           <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #e5e7eb", marginBottom: 20 }}>
             <h3 style={{ fontWeight: 700, marginBottom: 18, color: "#0f1623", fontSize: 15 }}>Informations de livraison</h3>
             {[
@@ -539,47 +652,52 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
               { key: "email",     label: "Email",          type: "email" },
               { key: "telephone", label: "Téléphone *",   type: "tel"   },
             ].map((f: any) => (
-              <input key={f.key} type={f.type} placeholder={f.label}
+              <input
+                key={f.key}
+                type={f.type}
+                placeholder={f.label}
                 value={checkoutForm[f.key]}
                 onChange={e => set(f.key, e.target.value)}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", marginBottom: 12, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", marginBottom: 12, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }}
+              />
             ))}
-            <textarea placeholder="Adresse de livraison *" value={checkoutForm.adresse}
-              onChange={e => set("adresse", e.target.value)} rows={3}
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+            <textarea
+              placeholder="Adresse de livraison *"
+              value={checkoutForm.adresse}
+              onChange={e => set("adresse", e.target.value)}
+              rows={3}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box" }}
+            />
           </div>
 
           {/* Moyens de paiement */}
           <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #e5e7eb" }}>
             <h3 style={{ fontWeight: 700, marginBottom: 18, color: "#0f1623", fontSize: 15 }}>Moyen de paiement</h3>
             {PAYMENT_METHODS.map(pm => (
-              <div key={pm.id} onClick={() => setPaymentMethod(pm.id)}
-                style={{ padding: "13px 16px", borderRadius: 12, cursor: "pointer", border: `2px solid ${paymentMethod === pm.id ? pm.color : "#e5e7eb"}`, background: paymentMethod === pm.id ? pm.color + "10" : "#fff", marginBottom: 10, display: "flex", alignItems: "center", gap: 12, transition: "all 0.15s" }}>
-
+              <div
+                key={pm.id}
+                onClick={() => setPaymentMethod(pm.id)}
+                style={{ padding: "13px 16px", borderRadius: 12, cursor: "pointer", border: `2px solid ${paymentMethod === pm.id ? pm.color : "#e5e7eb"}`, background: paymentMethod === pm.id ? pm.color + "10" : "#fff", marginBottom: 10, display: "flex", alignItems: "center", gap: 12, transition: "all 0.15s" }}
+              >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24 }}>
-                  {typeof pm.icon === "string" && pm.icon.length <= 4 ? (
-                    <span style={{ fontSize: 20 }}>{pm.icon}</span>
-                  ) : (
-                    <img src={pm.icon} alt={pm.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                  )}
+                  {typeof pm.icon === "string" && pm.icon.length <= 4
+                    ? <span style={{ fontSize: 20 }}>{pm.icon}</span>
+                    : <img src={pm.icon} alt={pm.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  }
                 </div>
-
                 <div style={{ flex: 1 }}>
                   <span style={{ fontWeight: 600, color: "#374151", fontSize: 14 }}>{pm.label}</span>
                   <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
                     {pm.id === "livraison" ? "Commande envoyée via WhatsApp" : "Paiement en ligne sécurisé"}
                   </div>
                 </div>
-
-                {paymentMethod === pm.id && (
-                  <span style={{ color: pm.color, fontWeight: 700 }}>✓</span>
-                )}
+                {paymentMethod === pm.id && <span style={{ color: pm.color, fontWeight: 700 }}>✓</span>}
               </div>
             ))}
           </div>
         </div>
 
-        {/* ── Colonne droite : récapitulatif ── */}
+        {/* Récapitulatif */}
         <div style={{ background: "#fff", borderRadius: 16, padding: 22, border: "1px solid #e5e7eb", alignSelf: "start", position: "sticky", top: 80 }}>
           <h3 style={{ fontWeight: 700, marginBottom: 16, color: "#0f1623", fontSize: 15 }}>Récapitulatif</h3>
           {cart.map(item => (
@@ -593,7 +711,6 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
             <span style={{ color: "#1e40af" }}>{formatPrix(cartTotal)}</span>
           </div>
 
-          {/* Note contextuelle */}
           {paymentMethod !== "livraison" && PAYMENT_LINKS[paymentMethod] && (
             <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: "#eff6ff", border: "1px solid #bfdbfe", fontSize: 12, color: "#1e40af" }}>
               💳 Vous serez redirigé vers la page de paiement sécurisée, puis votre commande sera confirmée.
@@ -605,12 +722,12 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
             </div>
           )}
 
-          {/* Bouton principal */}
-          <button onClick={handleConfirm}
-            style={{ width: "100%", padding: "13px", background: btn.bg, color: "#fff", border: "none", borderRadius: 50, fontWeight: 700, cursor: "pointer", fontSize: 14, marginTop: 18, boxShadow: "0 4px 12px rgba(15,22,35,0.15)", transition: "opacity 0.15s", opacity: formIsValid ? 1 : 0.5 }}>
+          <button
+            onClick={handleConfirm}
+            style={{ width: "100%", padding: "13px", background: btn.bg, color: "#fff", border: "none", borderRadius: 50, fontWeight: 700, cursor: "pointer", fontSize: 14, marginTop: 18, boxShadow: "0 4px 12px rgba(15,22,35,0.15)", transition: "opacity 0.15s", opacity: formIsValid ? 1 : 0.5 }}
+          >
             {btn.label}
           </button>
-
           {!formIsValid && (
             <p style={{ fontSize: 11, color: "#ef4444", textAlign: "center", marginTop: 8 }}>
               * Remplissez Nom, Téléphone et Adresse pour continuer
@@ -625,59 +742,32 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
 // ═══════════════════════════════════════════════════════════════════
 //   SUCCESS PAGE
 // ═══════════════════════════════════════════════════════════════════
-function SuccessPage({ setPage, orderInfo }: { 
-  setPage: (p: string) => void;
-  orderInfo?: { paymentMethod: string; whatsappUrl?: string };
-}) {
+function SuccessPage({ setPage }: { setPage: (p: string) => void }) {
   const steps = [
-    {
-      icon: "✅",
-      label: "Commande reçue",
-      sub: "Envoyée sur WhatsApp",
-      done: true,
-    },
-    {
-      icon: "⏳",
-      label: "Confirmation en attente",
-      sub: "Le vendeur va valider votre commande",
-      done: false,
-    },
-    {
-      icon: "🚚",
-      label: "Livraison en cours",
-      sub: "Votre colis est en route",
-      done: false,
-    },
+    { icon: "✅", label: "Commande reçue",          sub: "Envoyée sur WhatsApp",                    done: true  },
+    { icon: "⏳", label: "Confirmation en attente", sub: "Le vendeur va valider votre commande",    done: false },
+    { icon: "🚚", label: "Livraison en cours",       sub: "Votre colis est en route",               done: false },
   ];
 
   return (
     <div style={{ maxWidth: 560, margin: "60px auto 0", padding: "0 24px", textAlign: "center", fontFamily: "system-ui, sans-serif" }}>
-
-      {/* Icône succès */}
       <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 28 }}>✓</div>
-
       <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f1623", marginBottom: 10 }}>Commande envoyée !</h1>
       <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
         Votre commande a été transmise via WhatsApp. Nous vous confirmerons la disponibilité et la livraison sous peu.
       </p>
 
-      {/* Timeline de suivi */}
       <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "20px 24px", textAlign: "left", marginBottom: 24 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".05em", margin: "0 0 16px" }}>
-          Suivi de commande
-        </p>
-
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".05em", margin: "0 0 16px" }}>Suivi de commande</p>
         {steps.map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ width: 32, height: 32, borderRadius: "50%", background: step.done ? "#dcfce7" : "#f3f4f6", border: step.done ? "none" : "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>
                 {step.icon}
               </div>
-              {i < steps.length - 1 && (
-                <div style={{ width: 1, height: 32, background: "#e5e7eb" }} />
-              )}
+              {i < steps.length - 1 && <div style={{ width: 1, height: 32, background: "#e5e7eb" }} />}
             </div>
-            <div style={{ paddingTop: 6, paddingBottom: i < steps.length - 1 ? 0 : 0 }}>
+            <div style={{ paddingTop: 6 }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: step.done ? "#0f1623" : "#9ca3af", margin: 0 }}>{step.label}</p>
               <p style={{ fontSize: 12, color: "#9ca3af", margin: "2px 0 0" }}>{step.sub}</p>
             </div>
@@ -685,21 +775,12 @@ function SuccessPage({ setPage, orderInfo }: {
         ))}
       </div>
 
-      {/* Boutons */}
-      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-        {orderInfo?.whatsappUrl && (
-          <button
-            onClick={() => window.open(orderInfo.whatsappUrl, "_blank")}
-            style={{ padding: "10px 20px", background: "#25d366", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
-            📲 Ouvrir WhatsApp
-          </button>
-        )}
-        <button
-          onClick={() => setPage("boutique")}
-          style={{ padding: "10px 20px", background: "#0f1623", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
-          🛍️ Retour boutique
-        </button>
-      </div>
+      <button
+        onClick={() => setPage("boutique")}
+        style={{ padding: "10px 20px", background: "#0f1623", color: "#fff", border: "none", borderRadius: 50, fontWeight: 600, cursor: "pointer", fontSize: 13 }}
+      >
+        🛍️ Retour boutique
+      </button>
     </div>
   );
 }
