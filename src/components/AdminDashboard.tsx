@@ -89,7 +89,7 @@ function getPrimaryImage(p: Produit): string {
 }
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
-const NAVY = "#02101f";
+//const NAVY = "#02101f";
 const BLUE = "#1a6cff";
 const CHART_COLORS = ["#1a6cff", "#7C3AED", "#0D9488", "#DC2626", "#D97706", "#059669"];
 const ALL_CATEGORIES = ["Ordinateurs", "IoT", "Réseaux", "Sécurité", "Stockage", "Logiciels"];

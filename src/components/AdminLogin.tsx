@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const NAVY = "#02101f";
+//const NAVY = "#02101f";
 const BLUE = "#1a6cff";
 
 export default function AdminLogin() {
