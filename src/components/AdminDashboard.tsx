@@ -697,7 +697,24 @@ export default function AdminDashboard({ produits = [], onRefresh }: AdminDashbo
             ➕ Ajouter un produit
           </button>
         )}
+
+        <button
+      className="btn-ghost"
+      onClick={() => {
+        if (window.confirm("Voulez-vous vraiment vous déconnecter ?")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/login"; // ou votre route de login
+        }
+      }}
+      style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
+    >
+      🚪 Déconnexion
+    </button>
+    
       </div>
+
+      
 
       {showForm && (
         <ProduitForm
@@ -711,6 +728,7 @@ export default function AdminDashboard({ produits = [], onRefresh }: AdminDashbo
       <div style={{ display: "flex", gap: 8, borderBottom: "1px solid var(--gray-200)", paddingBottom: 12, marginBottom: 24 }}>
         <button className={`tab-btn ${activeTab === "list"  ? "active" : ""}`} onClick={() => setActiveTab("list")}>📦 Catalogue ({produits.length})</button>
         <button className={`tab-btn ${activeTab === "stats" ? "active" : ""}`} onClick={() => setActiveTab("stats")}>📊 Statistiques & KPIs</button>
+        
       </div>
 
       {activeTab === "stats" ? (
