@@ -86,7 +86,7 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
         if (item.id !== id) return item;
         const newQty = item.qty + delta;
         return newQty <= 0 ? null : { ...item, qty: newQty };
-      }).filter(Boolean)
+      }).filter((item): item is any => item !== null)
     );
   };
 
@@ -99,7 +99,6 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
     setCartOpen(false);
   };
 
-  // Enregistrement en BDD + Envoi WhatsApp
   const submitOrder = async () => {
     if (!checkoutForm.nom || !checkoutForm.telephone || !checkoutForm.adresse) {
       showToast("Veuillez remplir tous les champs obligatoires", "error"); return;
@@ -128,7 +127,6 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
     };
 
     try {
-      // 1. Sauvegarde en Base de données via votre API
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -137,10 +135,8 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
 
       if (!response.ok) throw new Error("Erreur serveur lors de l'enregistrement");
 
-      // 2. Ajout local à l'historique client
       setOrdersHistory(prev => [orderData, ...prev]);
 
-      // 3. Préparation du flux WhatsApp alternatif
       const lignes  = cart.map(item => `• ${item.nom} ×${item.qty} = ${formatPrix(Number(item.prix) * item.qty)}`).join("\n");
       const message =
         `🛒 *NOUVELLE COMMANDE — Baol Technologies*\n\n` +
@@ -193,21 +189,17 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
       {page === "detail" && selectedProduct && (
         <DetailPage
           selectedProduct={selectedProduct}
-          produits={produits}
           setPage={setPage}
-          setSelectedProduct={setSelectedProduct}
           addToCart={addToCart}
           cart={cart}
         />
       )}
       {page === "checkout" && (
         <CheckoutPage
-          setPage={setPage}
           checkoutForm={checkoutForm}
           setCheckoutForm={setCheckoutForm}
           paymentMethod={paymentMethod}
           setPaymentMethod={setPaymentMethod}
-          cart={cart}
           cartTotal={cartTotal}
           submitOrder={submitOrder}
           loading={loading}
@@ -229,7 +221,6 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
         handleCheckout={handleCheckout}
       />
 
-      {/* Bouton WhatsApp flottant ajusté pour éviter le masquage mobile */}
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour Baol Technologies 👋")}`}
         target="_blank"
@@ -251,7 +242,7 @@ export default function BTStore({ produits = [] }: { produits: any[] }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   NAVBAR (Optimisé mobile)
+//   NAVBAR
 // ═══════════════════════════════════════════════════════════════════
 function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }: any) {
   return (
@@ -275,7 +266,7 @@ function Navbar({ setPage, setSelectedProduct, setCartOpen, cartCount }: any) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   PRODUCT CARD (Optimisé mobile - Grille flexible)
+//   PRODUCT CARD
 // ═══════════════════════════════════════════════════════════════════
 function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProduct, setPage }: any) {
   const cartItem = cart.find((item: any) => item.id === product.id);
@@ -283,7 +274,7 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
 
   return (
     <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", border: "1px solid #e5e7eb", boxShadow: "0 2px 6px rgba(0,0,0,0.02)", display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ height: 160, overflow: "hidden", position: "relative", background: "#f3f4f6" }} onClick={() => { setSelectedProduct(product); setPage("detail"); }}>
+      <div style={{ height: 160, overflow: "hidden", position: "relative", background: "#f3f4f6", cursor: "pointer" }} onClick={() => { setSelectedProduct(product); setPage("detail"); }}>
         <img src={imgSrc} alt={product.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         {!product.stock && (
           <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.85)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -296,7 +287,7 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
       </div>
 
       <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-        <h3 style={{ fontWeight: 700, fontSize: 13, color: "#0f1623", margin: 0, lineHeight: 1.2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }} onClick={() => { setSelectedProduct(product); setPage("detail"); }}>
+        <h3 style={{ fontWeight: 700, fontSize: 13, color: "#0f1623", margin: 0, lineHeight: 1.2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", cursor: "pointer" }} onClick={() => { setSelectedProduct(product); setPage("detail"); }}>
           {product.nom}
         </h3>
         
@@ -324,13 +315,13 @@ function ProductCard({ product, cart, updateQuantity, addToCart, setSelectedProd
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   BOUTIQUE PAGE (Optimisée scroll horizontal catégories mobile)
+//   BOUTIQUE PAGE
 // ═══════════════════════════════════════════════════════════════════
 function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedProduct, setPage }: any) {
   const [categorie, setCategorie] = useState("Tous");
   const [search,    setSearch]    = useState("");
 
-  const filtered = produits.filter(p =>
+  const filtered = produits.filter((p: any) =>
     (categorie === "Tous" || p.categorie === categorie) &&
     (search === "" || p.nom.toLowerCase().includes(search.toLowerCase()))
   );
@@ -351,7 +342,6 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
         style={{ width: "100%", boxSizing: "border-box", padding: "12px 16px", borderRadius: 50, border: "1.5px solid #e5e7eb", outline: "none", fontSize: 14, marginBottom: 16 }}
       />
 
-      {/* Categories horizontales fluides sur Mobile */}
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 16, width: "100%", WebkitOverflowScrolling: "touch" }}>
         {CATEGORIES.map(c => (
           <button key={c} onClick={() => setCategorie(c)}
@@ -364,9 +354,8 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
       {filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af" }}>Aucun résultat.</div>
       ) : (
-        // Grille adaptative : 2 colonnes strictes sur petit écran, auto-fill sur bureau
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(145px, 1fr))", gap: 12 }}>
-          {filtered.map(product => (
+          {filtered.map((product: any) => (
             <ProductCard key={product.id} product={product} cart={cart} updateQuantity={updateQuantity} addToCart={addToCart} setSelectedProduct={setSelectedProduct} setPage={setPage} />
           ))}
         </div>
@@ -376,10 +365,9 @@ function BoutiquePage({ produits, cart, updateQuantity, addToCart, setSelectedPr
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   DETAIL PAGE (Optimisée mobile vertical bloc)
+//   DETAIL PAGE
 // ═══════════════════════════════════════════════════════════════════
-function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct, addToCart, cart }: any) {
-  const [activeImg, setActiveImg] = useState(0);
+function DetailPage({ selectedProduct: p, setPage, addToCart, cart }: any) {
   const displayImages = p.images && p.images.length > 0 ? p.images : [getProductImage(p)];
   const cartItem = cart.find((item: any) => item.id === p.id);
 
@@ -391,7 +379,7 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
 
       <div style={{ background: "#fff", borderRadius: 16, padding: 16, border: "1px solid #e5e7eb", display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ height: 240, background: "#f3f4f6", borderRadius: 12, overflow: "hidden" }}>
-          <img src={displayImages[activeImg]} alt={p.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={displayImages[0]} alt={p.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -416,9 +404,9 @@ function DetailPage({ selectedProduct: p, produits, setPage, setSelectedProduct,
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   CHECKOUT PAGE (Gestion de la soumission asynchrone)
+//   CHECKOUT PAGE
 // ═══════════════════════════════════════════════════════════════════
-function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, setPaymentMethod, cart, cartTotal, submitOrder, loading }: any) {
+function CheckoutPage({ checkoutForm, setCheckoutForm, paymentMethod, setPaymentMethod, cartTotal, submitOrder, loading }: any) {
   const set = (k: string, v: any) => setCheckoutForm((f: any) => ({ ...f, [k]: v }));
 
   return (
@@ -454,7 +442,7 @@ function CheckoutPage({ setPage, checkoutForm, setCheckoutForm, paymentMethod, s
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   NOUVEAU : COMPOSANT HISTORIQUE DES COMMANDES CLIENT
+//   HISTORIQUE DES COMMANDES CLIENT
 // ═══════════════════════════════════════════════════════════════════
 function OrdersHistoryPage({ orders, setPage }: { orders: any[]; setPage: (p: string) => void }) {
   return (
@@ -498,7 +486,7 @@ function OrdersHistoryPage({ orders, setPage }: { orders: any[]; setPage: (p: st
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//   CART DRAWER (Ajusté mobile plein écran)
+//   CART DRAWER
 // ═══════════════════════════════════════════════════════════════════
 function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, removeFromCart, cartTotal, handleCheckout }: any) {
   return (
@@ -506,7 +494,7 @@ function CartDrawer({ cartOpen, setCartOpen, cart, cartCount, updateQuantity, re
       {cartOpen && <div onClick={() => setCartOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 150 }} />}
       <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "100%", maxWidth: 380, background: "#fff", zIndex: 200, display: "flex", flexDirection: "column", transform: cartOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 0.25s ease" }}>
         <div style={{ padding: "16px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0f1623", color: "#fff" }}>
-          <span style={{尊fontWeight: 700, fontSize: 15 }}>Panier ({cartCount})</span>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>Panier ({cartCount})</span>
           <button onClick={() => setCartOpen(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 18 }}>✕</button>
         </div>
 
