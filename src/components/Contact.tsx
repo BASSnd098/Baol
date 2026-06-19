@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-//const NAVY = "#02101f";
+const NAVY = "#02101f"; // Corrigé : Réactivé pour éviter l'erreur "NAVY is not defined"
 const BLUE = "#1a6cff";
 const FORMSPREE_URL = "https://formspree.io/f/mwvzvwdq";
 
@@ -298,12 +298,14 @@ export default function ContactPage() {
             <div 
               style={styles.infoCard}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.1)";
+                const target = e.currentTarget as HTMLDivElement;
+                target.style.transform = "translateY(-4px)";
+                target.style.boxShadow = "0 12px 24px rgba(0,0,0,0.1)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
+                const target = e.currentTarget as HTMLDivElement;
+                target.style.transform = "translateY(0)";
+                target.style.boxShadow = "none";
               }}
             >
               <div style={styles.infoIcon}>📞</div>
@@ -318,12 +320,14 @@ export default function ContactPage() {
             <div 
               style={styles.infoCard}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.1)";
+                const target = e.currentTarget as HTMLDivElement;
+                target.style.transform = "translateY(-4px)";
+                target.style.boxShadow = "0 12px 24px rgba(0,0,0,0.1)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
+                const target = e.currentTarget as HTMLDivElement;
+                target.style.transform = "translateY(0)";
+                target.style.boxShadow = "none";
               }}
             >
               <div style={styles.infoIcon}>✉️</div>
@@ -332,10 +336,16 @@ export default function ContactPage() {
                 <a 
                   href="mailto:contact@baoltechnologies.com" 
                   style={{ ...styles.link, fontSize: "16px", fontWeight: 700 }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = "#1557d9"}
-                  onMouseLeave={(e) => e.currentTarget.style.color = BLUE}
+                  onMouseEnter={(e) => {
+                    const target = e.currentTarget as HTMLAnchorElement;
+                    target.style.color = "#1557d9";
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.currentTarget as HTMLAnchorElement;
+                    target.style.color = BLUE;
+                  }}
                 >
-                  contact@baoltechnologie.com
+                  contact@baoltechnologies.com
                 </a>
                 <p style={styles.infoDesc}>Pour vos cahiers des charges et demandes de cotation</p>
               </div>
@@ -345,12 +355,14 @@ export default function ContactPage() {
             <div 
               style={styles.infoCard}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.1)";
+                const target = e.currentTarget as HTMLDivElement;
+                target.style.transform = "translateY(-4px)";
+                target.style.boxShadow = "0 12px 24px rgba(0,0,0,0.1)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
+                const target = e.currentTarget as HTMLDivElement;
+                target.style.transform = "translateY(0)";
+                target.style.boxShadow = "none";
               }}
             >
               <div style={styles.infoIcon}>📍</div>
@@ -387,8 +399,8 @@ export default function ContactPage() {
                   onChange={handleChange}
                   style={styles.input}
                   placeholder="Ex: Assane Diop / Entreprise XYZ"
-                  onFocus={(e) => e.currentTarget.style.borderColor = BLUE}
-                  onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = BLUE; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
                 />
               </div>
 
@@ -403,8 +415,8 @@ export default function ContactPage() {
                     onChange={handleChange}
                     style={styles.input}
                     placeholder="adresse@mail.com"
-                    onFocus={(e) => e.currentTarget.style.borderColor = BLUE}
-                    onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = BLUE; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
                   />
                 </div>
                 <div style={styles.inputGroup}>
@@ -417,8 +429,8 @@ export default function ContactPage() {
                     onChange={handleChange}
                     style={styles.input}
                     placeholder="+221 ..."
-                    onFocus={(e) => e.currentTarget.style.borderColor = BLUE}
-                    onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = BLUE; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
                   />
                 </div>
               </div>
@@ -430,8 +442,8 @@ export default function ContactPage() {
                   value={formData.sujet}
                   onChange={handleChange}
                   style={styles.select}
-                  onFocus={(e) => e.currentTarget.style.borderColor = BLUE}
-                  onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = BLUE; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
                 >
                   <option value="Demande de partenariat">📊 Demande de partenariat digital</option>
                   <option value="Achat d'équipements / Stock">🖥️ Acquisition de matériel informatique / IoT</option>
@@ -450,8 +462,8 @@ export default function ContactPage() {
                   rows={5}
                   style={styles.textarea}
                   placeholder="Détaillez votre demande ici..."
-                  onFocus={(e) => e.currentTarget.style.borderColor = BLUE}
-                  onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = BLUE; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
                 />
               </div>
 
